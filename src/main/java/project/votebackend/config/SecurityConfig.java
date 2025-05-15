@@ -21,23 +21,46 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .cors(Customizer.withDefaults())
+                // CORS 설정을 기본값으로 활성화
+                .cors(Customizer.withDefaults())
 
-            .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 X (JWT 사용 예정)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/image/upload").permitAll() // 로그인 & 업로드 허용
-                .requestMatchers("/vote/**", "/reaction/**", "/storage/**", "user/**",
-                        "comment/**", "comment-like/**", "search/**", "follow/**").authenticated() // 나머지는 인증 필요
-                .anyRequest().permitAll()
-            )
+                // CSRF 보호 비활성화 (JWT 방식이므로 필요 없음)
+                .csrf(AbstractHttpConfigurer::disable)
 
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .build();
+                // 세션을 사용하지 않음 - JWT 방식 사용을 위해 STATELESS 설정
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 요청에 대한 권한 설정
+                .authorizeHttpRequests(auth -> auth
+                        // 로그인, 회원가입 등의 인증 없이 접근 가능한 엔드포인트
+                        .requestMatchers("/auth/**", "/image/upload").permitAll()
+
+                        // 아래 엔드포인트는 인증된 사용자만 접근 가능
+                        .requestMatchers(
+                                "/vote/**",         // 투표 관련
+                                "/reaction/**",     // 좋아요/북마크 등 반응
+                                "/storage/**",      // 저장소 관련
+                                "user/**",          // 유저 관련
+                                "comment/**",       // 댓글
+                                "comment-like/**",  // 댓글 좋아요
+                                "search/**",        // 검색
+                                "follow/**"         // 팔로우
+                        ).authenticated()
+
+                        // 그 외 요청은 모두 허용
+                        .anyRequest().permitAll()
+                )
+
+                // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // 최종적으로 SecurityFilterChain 객체를 빌드하여 반환
+                .build();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
+        // 비밀번호 암호화를 위한 BCrypt 인코더 빈 등록
         return new BCryptPasswordEncoder();
     }
 }

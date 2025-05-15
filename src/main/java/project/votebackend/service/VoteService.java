@@ -23,7 +23,6 @@ import project.votebackend.util.VoteStatisticsUtil;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +39,6 @@ public class VoteService {
     private final VoteOptionRepository voteOptionRepository;
     private final ElasticsearchClient elasticsearchClient;
     private final VoteImageRepository voteImageRepository;
-
     private final VoteStatisticsUtil voteStatisticsUtil;
 
     //투표 생성
@@ -220,6 +218,7 @@ public class VoteService {
     }
 
     //좋아요 상위 게시물
+    //추후 수정해야할 메서드
     public List<LoadVoteDto> getTopLikedVotes(String username, int size) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
@@ -241,9 +240,20 @@ public class VoteService {
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(page, size);
+
+        // 1. 카테고리별 글을 좋아요 순으로 조회
         Page<Vote> votes = voteRepository.findByCategoryOrderByLikeCount(categoryId, pageable);
 
-        return votes.map(vote -> LoadVoteDto.fromEntity(vote, user.getUserId(), voteSelectRepository));
+        // 2. voteId 목록 추출
+        List<Long> voteIds = votes.getContent().stream()
+                .map(Vote::getVoteId)
+                .toList();
+
+        // 3. 통계 정보 일괄 조회 (DB 조회 최소화)
+        Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(user.getUserId(), voteIds);
+
+        // 4. 통계 기반 DTO 변환 (성능 최적화)
+        return voteStatisticsUtil.getLoadVoteDtos(user.getUserId(), votes, stats, pageable);
     }
 
 }

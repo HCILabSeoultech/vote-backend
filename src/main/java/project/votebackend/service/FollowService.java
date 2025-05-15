@@ -17,6 +17,7 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
 
+    // 유저네임을 통한 id값 get
     private Long getUserIdByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND))

@@ -76,6 +76,7 @@ public class VoteController {
     }
 
     //좋아요 수 상위 게시물
+    //추후 수정해야할 api
     @GetMapping("/top-liked")
     public ResponseEntity<List<LoadVoteDto>> getTopLikedVotes(
             @AuthenticationPrincipal UserDetails userDetails,

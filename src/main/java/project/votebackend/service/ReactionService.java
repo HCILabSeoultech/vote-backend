@@ -21,7 +21,7 @@ public class ReactionService {
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
 
-    //좋아요 처리
+    //좋아요 처리(토글)
     @Transactional
     public void like(Long voteId, Long userId) {
         Vote vote = voteRepository.findById(voteId)
@@ -43,7 +43,7 @@ public class ReactionService {
                 );
     }
 
-    //북마크 처리
+    //북마크 처리(토글)
     @Transactional
     public void bookmark(Long voteId, Long userId) {
         Vote vote = voteRepository.findById(voteId)

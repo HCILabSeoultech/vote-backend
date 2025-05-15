@@ -24,15 +24,14 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     @Query(value = "SELECT COUNT(*) FROM vote_selections WHERE option_id = :optionId", nativeQuery = true)
     int countByOptionId(@Param("optionId") Long optionId);
 
-    // 성별 기준 분석
-//    @Query("""
-//        SELECT u.gender, vo.option
-//        FROM VoteSelection vs
-//        JOIN vs.user u
-//        JOIN vs.option vo
-//        WHERE vs.vote.voteId = :voteId
-//    """)
-//    List<Object[]> findGenderStatistics(@Param("voteId") Long voteId);
+    // 옵션 수 카운트
+    @Query(value = """
+        SELECT vs.option_id, COUNT(*) AS vote_count
+        FROM vote_selections vs
+        WHERE vs.vote_id IN :voteIds
+        GROUP BY vs.option_id
+    """, nativeQuery = true)
+    List<Object[]> findOptionVoteCounts(@Param("voteIds") List<Long> voteIds);
 
     // 성별 기준 분석 최적화
     @Query("""
@@ -44,16 +43,6 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
         GROUP BY u.gender, vo.option
     """)
     List<Object[]> findGenderStatistics(@Param("voteId") Long voteId);
-
-    // 연령 기준 분석
-//    @Query("""
-//        SELECT u.birthdate, vo.option
-//        FROM VoteSelection vs
-//        JOIN vs.user u
-//        JOIN vs.option vo
-//        WHERE vs.vote.voteId = :voteId
-//    """)
-//    List<Object[]> findAgeStatistics(@Param("voteId") Long voteId);
 
     // 연령 기준 분석 최적화
     @Query(value = """
@@ -69,16 +58,6 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     """, nativeQuery = true)
     List<Object[]> findAgeStatistics(@Param("voteId") Long voteId);
 
-    // 지역 기준 분석
-//    @Query("""
-//        SELECT u.address, vo.option
-//        FROM VoteSelection vs
-//        JOIN vs.user u
-//        JOIN vs.option vo
-//        WHERE vs.vote.voteId = :voteId
-//    """)
-//    List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
-
     // 지역 기준 분석 최적화
     @Query("""
         SELECT u.address, vo.option, COUNT(vs)
@@ -89,13 +68,4 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
         GROUP BY u.address, vo.option
     """)
     List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
-
-    // 옵션 수 카운트
-    @Query(value = """
-        SELECT vs.option_id, COUNT(*) AS vote_count
-        FROM vote_selections vs
-        WHERE vs.vote_id IN :voteIds
-        GROUP BY vs.option_id
-    """, nativeQuery = true)
-    List<Object[]> findOptionVoteCounts(@Param("voteIds") List<Long> voteIds);
 }

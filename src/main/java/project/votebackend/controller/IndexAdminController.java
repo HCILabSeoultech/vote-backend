@@ -14,6 +14,7 @@ public class IndexAdminController {
 
     private final IndexAdminService indexAdminService;
 
+    //Elasticsearch 투표 인덱싱
     @PostMapping("/create-votes-index")
     public ResponseEntity<String> createVotesIndex() {
         try {
@@ -24,6 +25,7 @@ public class IndexAdminController {
         }
     }
 
+    //Elasticsearch 유저 인덱싱
     @PostMapping("/create-users-index")
     public ResponseEntity<String> createUsersIndex() {
         try {

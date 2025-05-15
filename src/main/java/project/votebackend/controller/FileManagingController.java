@@ -4,15 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import project.votebackend.service.FileStorageService;
+import project.votebackend.service.FileManagingService;
 
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-public class FileUploadController {
+public class FileManagingController {
 
-    private final FileStorageService fileStorageService;
+    private final FileManagingService fileStorageService;
 
     //이미지 업로드
     @PostMapping("/image/upload")

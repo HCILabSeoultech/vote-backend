@@ -19,6 +19,9 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     //내가 작성한 글
     Page<Vote> findByUser_UserId(Long userId, Pageable pageable);
 
+    //사용자의 게시글 개수
+    Long countByUser_UserId(Long userId);
+
     //작성한 글 + 내가 선택한 관심사 + 팔로우한 사람의 글
     @Query(value = """
         (
@@ -121,6 +124,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     Optional<Vote> findByIdWithUserAndOptions(@Param("voteId") Long voteId);
 
     //좋아요 상위 글
+    //추후 처리해야할 메서드
     @Query("""
         SELECT v
         FROM Vote v
@@ -133,9 +137,6 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             @Param("reactionType") ReactionType reactionType,
             Pageable pageable
     );
-
-    //사용자의 게시글 개수
-    Long countByUser_UserId(Long userId);
 
     //특정 카테고리의 글 조회
     @Query("""
