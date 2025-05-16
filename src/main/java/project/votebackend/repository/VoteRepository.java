@@ -148,4 +148,11 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
         ORDER BY COUNT(r) DESC
     """)
     Page<Vote> findByCategoryOrderByLikeCount(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("""
+        SELECT DISTINCT v
+        FROM Vote v
+        LEFT JOIN FETCH v.selections s
+    """)
+    List<Vote> findAllWithSelections();
 }
