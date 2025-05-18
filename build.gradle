@@ -44,6 +44,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'net.coobird:thumbnailator:0.4.20'
 
+    //Swagger 의존성
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+
 
     implementation 'software.amazon.awssdk:s3:2.20.30'
 }
