@@ -20,7 +20,7 @@ public class VoteStatScheduler {
     }
 
     // 1시간 단위 관심 급등 통계 갱신
-    @Scheduled(cron = "0 0 * * * *") // 매 정각
+    @Scheduled(cron = "0 2 * * * *") // 매 정각
     public void runHourlyTrendingStatUpdate() {
         log.info("[스케줄] 1시간 단위 관심 급등 통계 시작");
         voteSchedulingService.generateHourlyStats();
