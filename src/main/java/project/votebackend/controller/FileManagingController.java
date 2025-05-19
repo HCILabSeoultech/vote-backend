@@ -25,7 +25,7 @@ public class FileManagingController {
     @DeleteMapping("/image/delete")
     public ResponseEntity<?> deleteImage(@RequestBody Map<String, String> body) {
         String fileUrl = body.get("fileUrl");
-        fileManagingService.deleteFile(fileUrl);
+        fileManagingService.deleteImage(fileUrl);
         return ResponseEntity.ok("삭제 완료");
     }
 
@@ -34,5 +34,13 @@ public class FileManagingController {
     public ResponseEntity<?> uploadVideo(@RequestParam("file") MultipartFile file) {
         String videoUrl = fileManagingService.storeVideo(file);
         return ResponseEntity.ok(videoUrl);
+    }
+
+    //영상 삭제
+    @DeleteMapping("/video/delete")
+    public ResponseEntity<?> deleteVideo(@RequestBody Map<String, String> body) {
+        String fileUrl = body.get("fileUrl");
+        fileManagingService.deleteVideo(fileUrl);
+        return ResponseEntity.ok("삭제 완료");
     }
 }

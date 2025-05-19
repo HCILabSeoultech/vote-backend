@@ -85,7 +85,7 @@ public class FileManagingService {
     }
 
     // 이미지 삭제 (프로필 변경, 게시글 수정/삭제 시 사용)
-    public void deleteFile(String fileUrl) {
+    public void deleteImage(String fileUrl) {
         try {
             // CloudFront URL에서 S3 키 추출 (ex: images/uuid_filename.jpg)
             String key = fileUrl.substring(fileUrl.indexOf("images/"));
@@ -179,6 +179,28 @@ public class FileManagingService {
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new RuntimeException("썸네일 추출 실패");
+        }
+    }
+
+    // 영상 및 썸네일 삭제
+    public void deleteVideo(String fileUrl) {
+        try {
+            String key = fileUrl.substring(fileUrl.indexOf("videos/"));
+            String thumbnailKey = key.replace("videos/", "thumbnails/").replaceAll("\\..+$", ".jpg");
+
+            DeleteObjectRequest deleteVideo = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
+            DeleteObjectRequest deleteThumb = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(thumbnailKey)
+                    .build();
+
+            s3Client.deleteObject(deleteVideo);
+            s3Client.deleteObject(deleteThumb);
+        } catch (Exception e) {
+            throw new RuntimeException("영상 삭제 실패", e);
         }
     }
 }
