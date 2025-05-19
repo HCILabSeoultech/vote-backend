@@ -12,12 +12,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FileManagingController {
 
-    private final FileManagingService fileStorageService;
+    private final FileManagingService fileManagingService;
 
     //이미지 업로드
     @PostMapping("/image/upload")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
-        String imageUrl = fileStorageService.storeFile(file);
+        String imageUrl = fileManagingService.storeFile(file);
         return ResponseEntity.ok(imageUrl);
     }
 
@@ -25,7 +25,14 @@ public class FileManagingController {
     @DeleteMapping("/image/delete")
     public ResponseEntity<?> deleteImage(@RequestBody Map<String, String> body) {
         String fileUrl = body.get("fileUrl");
-        fileStorageService.deleteFile(fileUrl);
+        fileManagingService.deleteFile(fileUrl);
         return ResponseEntity.ok("삭제 완료");
+    }
+
+    //영상 업로드
+    @PostMapping("/video/upload")
+    public ResponseEntity<?> uploadVideo(@RequestParam("file") MultipartFile file) {
+        String videoUrl = fileManagingService.storeVideo(file);
+        return ResponseEntity.ok(videoUrl);
     }
 }

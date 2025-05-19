@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -101,6 +102,83 @@ public class FileManagingService {
         } catch (Exception e) {
             // 삭제 실패 시 예외 처리
             throw new RuntimeException("S3 이미지 삭제 실패", e);
+        }
+    }
+
+    // 비디오 저장
+    public String storeVideo(MultipartFile file) {
+        try {
+            // 50MB 초과 제한
+            if (file.getSize() > 50 * 1024 * 1024) {
+                throw new IllegalArgumentException("50MB를 초과한 파일은 업로드할 수 없습니다.");
+            }
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            String videoKey = "videos/" + fileName;
+            String thumbnailKey = "thumbnails/" + fileName.replaceAll("\\..+$", ".jpg");
+
+            // S3에 영상 업로드
+            PutObjectRequest videoRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(videoKey)
+                    .contentType(file.getContentType())
+                    .build();
+
+            s3Client.putObject(videoRequest, RequestBody.fromBytes(file.getBytes()));
+
+            // 썸네일 생성 (ffmpeg로 0초 프레임 추출)
+            File tempVideoFile = File.createTempFile("temp_video", null);
+            file.transferTo(tempVideoFile);
+
+            File thumbnailFile = File.createTempFile("temp_thumbnail", ".jpg");
+            extractThumbnail(tempVideoFile, thumbnailFile);
+
+            // 썸네일 압축 & 리사이즈 (1080x1080, JPEG, 품질 50%)
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            Thumbnails.of(thumbnailFile)
+                    .size(1080, 1080)
+                    .outputFormat("jpg")
+                    .outputQuality(0.5)
+                    .toOutputStream(os);
+
+            byte[] resizedThumbnail = os.toByteArray();
+
+            // S3에 썸네일 업로드
+            PutObjectRequest thumbRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(thumbnailKey)
+                    .contentType("image/jpeg")
+                    .build();
+
+            s3Client.putObject(thumbRequest, RequestBody.fromBytes(resizedThumbnail));
+
+            // 임시 파일 삭제
+            tempVideoFile.delete();
+            thumbnailFile.delete();
+
+            // 최종 URL 반환 (CloudFront)
+            return "https://" + cloudFrontDomain + "/" + videoKey;
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("영상 업로드 실패", e);
+        }
+    }
+
+    // 썸네일 추출 (ffmpeg 이용)
+    private void extractThumbnail(File videoFile, File thumbnailFile) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffmpeg", "-y",
+                "-i", videoFile.getAbsolutePath(),
+                "-ss", "00:00:00",  // 0초 지점
+                "-vframes", "1",
+                "-vf", "scale=640:-1",
+                thumbnailFile.getAbsolutePath()
+        );
+
+        Process process = pb.start();
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("썸네일 추출 실패");
         }
     }
 }
