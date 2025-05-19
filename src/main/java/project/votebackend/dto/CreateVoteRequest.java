@@ -11,6 +11,7 @@ public class CreateVoteRequest {
     private Long categoryId;
     private String title;
     private String content;
+    private String link;
     private LocalDateTime finishTime;
     private List<VoteOptionDto> options;
     private List<String> imageUrls;

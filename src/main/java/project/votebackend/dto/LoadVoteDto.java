@@ -26,6 +26,7 @@ public class LoadVoteDto {
     private Long voteId;
     private String title;
     private String content;
+    private String link;
     private String categoryName;
     private Long userId;
     private String username;
@@ -165,6 +166,7 @@ public class LoadVoteDto {
                 .voteId(voteId)
                 .title(vote.getTitle())
                 .content(vote.getContent())
+                .link(vote.getLink())
                 .categoryName(vote.getCategory().getName())
                 .userId(vote.getUser().getUserId())
                 .username(vote.getUser().getUsername())

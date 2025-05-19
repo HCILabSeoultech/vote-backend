@@ -31,6 +31,7 @@ public class Vote extends BaseEntity{
 
     private String title;
     private String content;
+    private String link;
     private LocalDateTime finishTime;
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL)
