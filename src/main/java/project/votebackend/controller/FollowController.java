@@ -56,4 +56,11 @@ public class FollowController {
         Long myId = userDetails.getId();
         return ResponseEntity.ok(followService.getFollowers(myId));
     }
+
+    // 내가 팔로우한 사람 목록 조회
+    @GetMapping("/followings")
+    public ResponseEntity<List<FollowUserDto>> getMyFollowings(@AuthenticationPrincipal CustumUserDetails userDetails) {
+        Long myId = userDetails.getId();
+        return ResponseEntity.ok(followService.getFollowings(myId));
+    }
 }

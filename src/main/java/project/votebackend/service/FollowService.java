@@ -97,4 +97,23 @@ public class FollowService {
                 })
                 .toList();
     }
+
+    //내가 팔로우한 사람 목록 조회
+    public List<FollowUserDto> getFollowings(Long userId) {
+        User me = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        List<Follow> followings = followRepository.findByFollower(me);
+
+        return followings.stream()
+                .map(f -> {
+                    User following = f.getFollowing();
+                    return FollowUserDto.builder()
+                            .userId(following.getUserId())
+                            .username(following.getUsername())
+                            .profileImage(following.getProfileImage())
+                            .build();
+                })
+                .toList();
+    }
 }
