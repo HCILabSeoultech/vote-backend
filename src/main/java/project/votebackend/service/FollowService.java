@@ -4,11 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.Follow;
+import project.votebackend.domain.User;
+import project.votebackend.dto.FollowUserDto;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.FollowException;
 import project.votebackend.repository.FollowRepository;
 import project.votebackend.repository.UserRepository;
 import project.votebackend.type.ErrorCode;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +33,13 @@ public class FollowService {
     public Long follow(String username, Long followingId) {
         Long followerId = getUserIdByUsername(username);
 
-        followRepository.findByFollowerIdAndFollowingId(followerId, followingId)
+        // 중복 팔로우 검사
+        User follower = userRepository.findById(followerId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        followRepository.findByFollowerAndFollowing(follower, following)
                 .ifPresent(f -> {
                     try {
                         throw new FollowException(ErrorCode.ALREADY_FOLLOW);
@@ -39,8 +49,8 @@ public class FollowService {
                 });
 
         Follow follow = Follow.builder()
-                .followerId(followerId)
-                .followingId(followingId)
+                .follower(follower)
+                .following(following)
                 .build();
 
         followRepository.save(follow);
@@ -50,13 +60,41 @@ public class FollowService {
     //언팔로우
     @Transactional
     public void unfollow(String username, Long followingId) {
-        Long followerId = getUserIdByUsername(username);
-        followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
+        User follower = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        followRepository.deleteByFollowerAndFollowing(follower, following);
     }
 
     //팔로우 여부 확인
     public boolean isFollowing(String username, Long followingId) {
-        Long followerId = getUserIdByUsername(username);
-        return followRepository.findByFollowerIdAndFollowingId(followerId, followingId).isPresent();
+        User follower = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        return followRepository.findByFollowerAndFollowing(follower, following).isPresent();
+    }
+
+    //나를 팔로우한 사람 목록 조회
+    public List<FollowUserDto> getFollowers(Long userId) {
+        User me = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        List<Follow> followers = followRepository.findByFollowing(me);
+
+        return followers.stream()
+                .map(f -> {
+                    User follower = f.getFollower();
+                    return FollowUserDto.builder()
+                            .userId(follower.getUserId())
+                            .username(follower.getUsername())
+                            .profileImage(follower.getProfileImage())
+                            .build();
+                })
+                .toList();
     }
 }

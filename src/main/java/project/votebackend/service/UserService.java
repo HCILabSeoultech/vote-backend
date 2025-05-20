@@ -57,8 +57,8 @@ public class UserService {
 
         // 6. 게시글 수, 팔로워 수, 팔로잉 수 조회
         Long postCount = voteRepository.countByUser_UserId(userId);
-        Long followerCount = followRepository.countByFollowingId(userId);
-        Long followingCount = followRepository.countByFollowerId(userId);
+        Long followerCount = followRepository.countByFollowing(user);
+        Long followingCount = followRepository.countByFollower(user);
 
         // 7. DTO 조립 및 반환
         return UserPageDto.builder()
@@ -99,8 +99,8 @@ public class UserService {
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
-        Long followerCount = followRepository.countByFollowingId(userId);
-        Long followingCount = followRepository.countByFollowerId(userId);
+        Long followerCount = followRepository.countByFollowing(user);
+        Long followingCount = followRepository.countByFollower(user);
 
         // 6. 사용자 페이지 DTO 반환
         return UserPageDto.builder()

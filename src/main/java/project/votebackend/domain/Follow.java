@@ -1,9 +1,6 @@
 package project.votebackend.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -17,6 +14,11 @@ public class Follow extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long followId;
 
-    private Long followerId;
-    private Long followingId;
+    @ManyToOne
+    @JoinColumn(name = "follower_id")
+    private User follower;
+
+    @ManyToOne
+    @JoinColumn(name = "following_id")
+    private User following;
 }

@@ -5,11 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import project.votebackend.dto.FollowUserDto;
 import project.votebackend.exception.AuthException;
 import project.votebackend.repository.UserRepository;
+import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.FollowService;
 import project.votebackend.type.ErrorCode;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -45,5 +48,12 @@ public class FollowController {
                                          @AuthenticationPrincipal UserDetails userDetails) {
         boolean isFollowing = followService.isFollowing(userDetails.getUsername(), followingId);
         return ResponseEntity.ok(Map.of("isFollowing", isFollowing));
+    }
+
+    // 나를 팔로우한 사람 목록 조회
+    @GetMapping("/followers")
+    public ResponseEntity<List<FollowUserDto>> getMyFollowers(@AuthenticationPrincipal CustumUserDetails userDetails) {
+        Long myId = userDetails.getId();
+        return ResponseEntity.ok(followService.getFollowers(myId));
     }
 }
