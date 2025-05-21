@@ -32,7 +32,7 @@ public class SecurityConfig {
 
                 // 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인, 회원가입 등의 인증 없이 접근 가능한 엔드포인트
+                        // 로그인, 회원가입, 공유 등의 인증 없이 접근 가능한 엔드포인트
                         .requestMatchers("/auth/**", "/image/upload").permitAll()
 
                         // 아래 엔드포인트는 인증된 사용자만 접근 가능
@@ -40,11 +40,12 @@ public class SecurityConfig {
                                 "/vote/**",         // 투표 관련
                                 "/reaction/**",     // 좋아요/북마크 등 반응
                                 "/storage/**",      // 저장소 관련
-                                "user/**",          // 유저 관련
-                                "comment/**",       // 댓글
-                                "comment-like/**",  // 댓글 좋아요
-                                "search/**",        // 검색
-                                "follow/**"         // 팔로우
+                                "/user/**",          // 유저 관련
+                                "/comment/**",       // 댓글
+                                "/comment-like/**",  // 댓글 좋아요
+                                "/search/**",        // 검색
+                                "/follow/**",         // 팔로우
+                                "/rank/**"            // 랭킹
                         ).authenticated()
 
                         // 그 외 요청은 모두 허용
