@@ -5,11 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import project.votebackend.domain.Vote;
-import project.votebackend.dto.LoadVoteDto;
-import project.votebackend.repository.CommentRepository;
-import project.votebackend.repository.ReactionRepository;
-import project.votebackend.repository.VoteSelectRepository;
+import project.votebackend.domain.vote.Vote;
+import project.votebackend.dto.vote.LoadVoteDto;
+import project.votebackend.repository.comment.CommentRepository;
+import project.votebackend.repository.reaction.ReactionRepository;
+import project.votebackend.repository.vote.VoteSelectRepository;
 
 import java.util.HashMap;
 import java.util.List;

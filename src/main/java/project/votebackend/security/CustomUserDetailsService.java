@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import project.votebackend.domain.User;
+import project.votebackend.domain.user.User;
 import project.votebackend.exception.AuthException;
-import project.votebackend.repository.UserRepository;
+import project.votebackend.repository.user.UserRepository;
 import project.votebackend.type.ErrorCode;
 
 @Service

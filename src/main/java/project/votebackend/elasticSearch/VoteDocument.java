@@ -1,7 +1,7 @@
 package project.votebackend.elasticSearch;
 
 import lombok.*;
-import project.votebackend.domain.Vote;
+import project.votebackend.domain.vote.Vote;
 
 @Getter
 @Setter

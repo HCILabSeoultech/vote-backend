@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import project.votebackend.service.VoteSchedulingService;
+import project.votebackend.service.vote.VoteSchedulingService;
 
 @Component
 @RequiredArgsConstructor
