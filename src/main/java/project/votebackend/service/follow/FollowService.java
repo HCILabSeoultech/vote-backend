@@ -13,6 +13,8 @@ import project.votebackend.repository.user.UserRepository;
 import project.votebackend.type.ErrorCode;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,43 +79,5 @@ public class FollowService {
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         return followRepository.findByFollowerAndFollowing(follower, following).isPresent();
-    }
-
-    //나를 팔로우한 사람 목록 조회
-    public List<FollowUserDto> getFollowers(Long userId) {
-        User me = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
-
-        List<Follow> followers = followRepository.findByFollowing(me);
-
-        return followers.stream()
-                .map(f -> {
-                    User follower = f.getFollower();
-                    return FollowUserDto.builder()
-                            .userId(follower.getUserId())
-                            .username(follower.getUsername())
-                            .profileImage(follower.getProfileImage())
-                            .build();
-                })
-                .toList();
-    }
-
-    //내가 팔로우한 사람 목록 조회
-    public List<FollowUserDto> getFollowings(Long userId) {
-        User me = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
-
-        List<Follow> followings = followRepository.findByFollower(me);
-
-        return followings.stream()
-                .map(f -> {
-                    User following = f.getFollowing();
-                    return FollowUserDto.builder()
-                            .userId(following.getUserId())
-                            .username(following.getUsername())
-                            .profileImage(following.getProfileImage())
-                            .build();
-                })
-                .toList();
     }
 }

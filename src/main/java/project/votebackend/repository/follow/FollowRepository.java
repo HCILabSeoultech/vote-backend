@@ -1,5 +1,6 @@
 package project.votebackend.repository.follow;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import project.votebackend.domain.follow.Follow;
@@ -17,8 +18,13 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     Long countByFollower(User follower); //내가 팔로잉하는 사람 수
 
     // 나를 팔로우한 사람들
-    List<Follow> findByFollowing(User user);
+    // 팔로워 목록 조회 시 N+1 방지
+    @EntityGraph(attributePaths = "follower")
+    List<Follow> findByFollowing(User following);
 
     // 내가 팔로잉한 사람들
     List<Follow> findByFollower(User user);
+
+    // 내가 팔로우한 사람들 중 followerId 리스트에 포함된 대상
+    List<Follow> findByFollower_UserIdAndFollowing_UserIdIn(Long followerId, List<Long> followingIds);
 }

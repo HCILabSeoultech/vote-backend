@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.dto.follow.FollowUserDto;
 import project.votebackend.security.CustumUserDetails;
+import project.votebackend.service.follow.FollowListService;
 import project.votebackend.service.follow.FollowService;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class FollowController {
 
     private final FollowService followService;
+    private final FollowListService followListService;
 
     // 팔로우
     @PostMapping
@@ -51,13 +53,13 @@ public class FollowController {
     @GetMapping("/followers")
     public ResponseEntity<List<FollowUserDto>> getMyFollowers(@AuthenticationPrincipal CustumUserDetails userDetails) {
         Long myId = userDetails.getId();
-        return ResponseEntity.ok(followService.getFollowers(myId));
+        return ResponseEntity.ok(followListService.getFollowers(myId));
     }
 
     // 내가 팔로우한 사람 목록 조회
     @GetMapping("/followings")
     public ResponseEntity<List<FollowUserDto>> getMyFollowings(@AuthenticationPrincipal CustumUserDetails userDetails) {
         Long myId = userDetails.getId();
-        return ResponseEntity.ok(followService.getFollowings(myId));
+        return ResponseEntity.ok(followListService.getFollowings(myId));
     }
 }
