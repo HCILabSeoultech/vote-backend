@@ -24,6 +24,10 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     @Query(value = "SELECT COUNT(*) FROM vote_selections WHERE option_id = :optionId", nativeQuery = true)
     int countByOptionId(@Param("optionId") Long optionId);
 
+    // 유저가 참여한 투표 수
+    @Query("SELECT COUNT(vs) FROM VoteSelection vs WHERE vs.user.userId = :userId")
+    Long countByUserId(@Param("userId") Long userId);
+
     // 옵션 수 카운트
     @Query(value = """
         SELECT vs.option_id, COUNT(*) AS vote_count

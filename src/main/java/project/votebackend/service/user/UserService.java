@@ -14,6 +14,7 @@ import project.votebackend.exception.AuthException;
 import project.votebackend.repository.follow.FollowRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteRepository;
+import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.util.VoteStatisticsUtil;
 
@@ -27,6 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final FollowRepository followRepository;
+    private final VoteSelectRepository voteSelectRepository;
     private final VoteStatisticsUtil voteStatisticsUtil;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
@@ -56,6 +58,7 @@ public class UserService {
 
         // 6. 게시글 수, 팔로워 수, 팔로잉 수 조회
         Long postCount = voteRepository.countByUser_UserId(userId);
+        Long participatedCount = voteSelectRepository.countByUserId(userId);
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
@@ -68,8 +71,10 @@ public class UserService {
                 .point(user.getPoint())
                 .posts(voteDto)
                 .postCount(postCount)
+                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
@@ -98,6 +103,7 @@ public class UserService {
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
+        Long participatedCount = voteSelectRepository.countByUserId(userId);
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
@@ -110,8 +116,10 @@ public class UserService {
                 .point(user.getPoint())
                 .posts(voteDto)
                 .postCount(postCount)
+                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 

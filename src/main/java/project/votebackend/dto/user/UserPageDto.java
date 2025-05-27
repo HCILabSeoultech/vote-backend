@@ -5,6 +5,8 @@ import lombok.Data;
 import org.springframework.data.domain.Page;
 import project.votebackend.dto.vote.LoadVoteDto;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 public class UserPageDto {
@@ -17,6 +19,8 @@ public class UserPageDto {
     private Long followerCount;
     private Long followingCount;
     private Long postCount;
+    private Long participatedCount;
+    private LocalDateTime createdAt;
     private Page<LoadVoteDto> posts;
 
 
