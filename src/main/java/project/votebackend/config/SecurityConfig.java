@@ -33,7 +33,7 @@ public class SecurityConfig {
                 // 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입, 공유 등의 인증 없이 접근 가능한 엔드포인트
-                        .requestMatchers("/location/verify","/auth/**", "/image/upload", "/share/vote/**").permitAll()
+                        .requestMatchers("/location/verify","/auth/**", "/image/upload", "/share/vote/**", "/email/**").permitAll()
 
                         // 아래 엔드포인트는 인증된 사용자만 접근 가능
                         .requestMatchers(
