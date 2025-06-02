@@ -13,6 +13,7 @@ import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
+import project.votebackend.dto.user.UserResponseDto;
 import project.votebackend.dto.user.UserUpdateDto;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.dto.user.UserPageDto;
@@ -143,58 +144,59 @@ public class UserService {
 
     //회원정보 수정
     @Transactional
-    public User updateUser(Long userId, UserUpdateDto dto) {
+    public UserResponseDto updateUser(Long userId, UserUpdateDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
-        // 새 프로필 이미지가 있을 때
+        // 프로필 이미지 변경
         if (dto.getProfileImage() != null) {
             String newImage = dto.getProfileImage();
             String oldImage = user.getProfileImage();
 
-            // 기존 이미지가 default가 아니고, 변경된 경우에만 삭제
             if (!Objects.equals(oldImage, "default.png") && !Objects.equals(newImage, oldImage)) {
-                fileManagingService.deleteImage(oldImage);  // S3에서 삭제
+                fileManagingService.deleteImage(oldImage);  // 기존 이미지 삭제
             }
 
-            user.setProfileImage(newImage);  // 새 이미지로 변경
+            user.setProfileImage(newImage);
+        }
 
-            // 이름 수정
-            if (dto.getName() != null) {
-                user.setName(dto.getName());
-            }
+        // 이름, 소개 변경
+        if (dto.getName() != null) user.setName(dto.getName());
+        if (dto.getIntroduction() != null) user.setIntroduction(dto.getIntroduction());
 
-            // 자기소개 수정
-            if (dto.getIntroduction() != null) {
-                user.setIntroduction(dto.getIntroduction());
-            }
-
-            // 관심 카테고리 삭제 후 다시 저장
+        // 관심 카테고리 변경
+        if (dto.getInterestCategory() != null) {
             userInterestRepository.deleteByUser(user);
 
-            if (dto.getInterestCategory() != null) {
-                for (Long categoryId : dto.getInterestCategory()) {
-                    Category category = categoryRepository.findById(categoryId)
-                            .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
-                    UserInterest interest = UserInterest.builder()
-                            .user(user)
-                            .category(category)
-                            .build();
-                    userInterestRepository.save(interest);
-                }
-            }
+            for (Long categoryId : dto.getInterestCategory()) {
+                Category category = categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
-            // Elasticsearch 동기화
-            try {
-                elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
-                elasticsearchClient.index(i -> i
-                        .index("users")
-                        .id(String.valueOf(user.getUserId()))
-                        .document(UserDocument.fromEntity(user)));
-            } catch (IOException e) {
-                log.error("Elasticsearch 업데이트 실패", e);
+                UserInterest interest = UserInterest.builder()
+                        .user(user)
+                        .category(category)
+                        .build();
+
+                userInterestRepository.save(interest);
             }
         }
-        return user;
+
+        // 관심 카테고리 이름 목록 재조회
+        List<String> interestCategoryNames = userInterestRepository.findByUser(user).stream()
+                .map(ui -> ui.getCategory().getName())
+                .toList();
+
+        // Elasticsearch 업데이트
+        try {
+            elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
+            elasticsearchClient.index(i -> i
+                    .index("users")
+                    .id(String.valueOf(user.getUserId()))
+                    .document(UserDocument.fromEntity(user)));
+        } catch (IOException e) {
+            log.error("Elasticsearch 업데이트 실패", e);
+        }
+
+        return UserResponseDto.fromEntity(user, interestCategoryNames);
     }
 }
