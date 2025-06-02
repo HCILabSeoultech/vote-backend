@@ -13,11 +13,8 @@ import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
-import project.votebackend.dto.user.OtherUserPageDto;
-import project.votebackend.dto.user.UserResponseDto;
-import project.votebackend.dto.user.UserUpdateDto;
+import project.votebackend.dto.user.*;
 import project.votebackend.dto.vote.LoadVoteDto;
-import project.votebackend.dto.user.UserPageDto;
 import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
@@ -123,21 +120,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
-        // 프로필 이미지 변경
-        if (dto.getProfileImage() != null) {
-            String newImage = dto.getProfileImage();
-            String oldImage = user.getProfileImage();
-
-            if (!Objects.equals(oldImage, "default.png") && !Objects.equals(newImage, oldImage)) {
-                fileManagingService.deleteImage(oldImage);  // 기존 이미지 삭제
-            }
-
-            user.setProfileImage(newImage);
-        }
-
-        // 이름, 소개 변경
+        // 이름, 소개, 이미지 변경
         if (dto.getName() != null) user.setName(dto.getName());
         if (dto.getIntroduction() != null) user.setIntroduction(dto.getIntroduction());
+        user.setProfileImage(dto.getProfileImage());
 
         // 관심 카테고리 변경
         if (dto.getInterestCategory() != null) {
@@ -162,16 +148,40 @@ public class UserService {
                 .toList();
 
         // Elasticsearch 업데이트
-        try {
-            elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
-            elasticsearchClient.index(i -> i
-                    .index("users")
-                    .id(String.valueOf(user.getUserId()))
-                    .document(UserDocument.fromEntity(user)));
-        } catch (IOException e) {
-            log.error("Elasticsearch 업데이트 실패", e);
-        }
+//        try {
+//            elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
+//            elasticsearchClient.index(i -> i
+//                    .index("users")
+//                    .id(String.valueOf(user.getUserId()))
+//                    .document(UserDocument.fromEntity(user)));
+//        } catch (IOException e) {
+//            log.error("Elasticsearch 업데이트 실패", e);
+//        }
 
         return UserResponseDto.fromEntity(user, interestCategoryNames);
+    }
+
+    //유저정보 조회
+    public UserInfoDto getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        // 관심사 카테고리 ID만 추출
+        List<Long> interestIds = user.getUserInterests().stream()
+                .map(userInterest -> userInterest.getCategory().getCategoryId())
+                .toList();
+
+
+        return UserInfoDto.builder()
+                .username(user.getUsername())
+                .name(user.getName())
+                .gender(user.getGender())
+                .profileImage(user.getProfileImage())
+                .birthdate(user.getBirthdate())
+                .address(user.getAddress())
+                .phone(user.getPhone())
+                .userInterests(interestIds)
+                .introduction(user.getIntroduction())
+                .build();
     }
 }

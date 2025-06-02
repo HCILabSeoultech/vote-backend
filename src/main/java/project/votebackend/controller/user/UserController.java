@@ -9,10 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.domain.user.User;
-import project.votebackend.dto.user.OtherUserPageDto;
-import project.votebackend.dto.user.UserPageDto;
-import project.votebackend.dto.user.UserResponseDto;
-import project.votebackend.dto.user.UserUpdateDto;
+import project.votebackend.dto.user.*;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.user.UserService;
 
@@ -44,12 +41,19 @@ public class UserController {
     }
 
     //회원정보 수정
-    @PatchMapping("/user/update")
+    @PatchMapping("/update")
     public ResponseEntity<UserResponseDto> updateUserInfo(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestBody @Valid UserUpdateDto dto
     ) {
         UserResponseDto updatedUser = userService.updateUser(userDetails.getId(), dto);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    //내 정보 가져오기
+    @GetMapping("/info")
+    public ResponseEntity<UserInfoDto> getUserInfo(@AuthenticationPrincipal CustumUserDetails userDetails) {
+        UserInfoDto userInfo = userService.getUserInfo(userDetails.getId());
+        return ResponseEntity.ok(userInfo);
     }
 }
