@@ -35,8 +35,12 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorMsg);
         }
 
-        User newUser = authService.registerUser(userSignupDto);
-        return ResponseEntity.ok(newUser);
+        authService.registerUser(userSignupDto);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "회원가입이 완료되었습니다."
+        ));
     }
 
     // 아이디 중복 확인

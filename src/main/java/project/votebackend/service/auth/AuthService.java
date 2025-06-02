@@ -38,7 +38,7 @@ public class AuthService {
 
     // 회원가입 (아이디 및 전화번호는 중복 존재 불가)
     @Transactional
-    public User registerUser(UserSignupDto dto) {
+    public void registerUser(UserSignupDto dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new AuthException(ErrorCode.ALREADY_EXIST_NAME);
         }
@@ -87,8 +87,6 @@ public class AuthService {
         } catch (IOException e) {
             log.error("Elasticsearch 저장 실패", e);
         }
-
-        return savedUser;
     }
 
     //아이디 중복 확인

@@ -44,7 +44,7 @@ public class UserController {
     }
 
     //회원정보 수정
-    @PutMapping("/user/update")
+    @PatchMapping("/user/update")
     public ResponseEntity<UserResponseDto> updateUserInfo(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestBody @Valid UserUpdateDto dto

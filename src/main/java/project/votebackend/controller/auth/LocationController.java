@@ -1,4 +1,4 @@
-package project.votebackend.controller.user;
+package project.votebackend.controller.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
