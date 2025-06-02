@@ -13,6 +13,7 @@ import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
+import project.votebackend.dto.user.OtherUserPageDto;
 import project.votebackend.dto.user.UserResponseDto;
 import project.votebackend.dto.user.UserUpdateDto;
 import project.votebackend.dto.vote.LoadVoteDto;
@@ -51,54 +52,30 @@ public class UserService {
     private final ElasticsearchClient elasticsearchClient;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
-    public UserPageDto getMyPage(Long userId, Pageable pageable) {
+    public UserPageDto getMyPage(Long userId) {
         // 1. 사용자 정보 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
-        // 2. 최신 순으로 정렬된 페이징 객체 생성
-        Pageable sortedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
-
-        // 3. 사용자가 작성한 투표글 페이징 조회
-        Page<Vote> votes = voteRepository.findByUser_UserId(userId, sortedPageable);
-
-        // 4. 통계 수집용 voteId 리스트 추출
-        List<Long> voteIds = votes.getContent().stream()
-                .map(Vote::getVoteId)
-                .toList();
-
-        // 5. 투표 통계 수집 및 DTO 변환
-        Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
-        Page<LoadVoteDto> voteDto = voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, sortedPageable);
-
-        // 6. 게시글 수, 팔로워 수, 팔로잉 수 조회
+        // 2. 게시글 수, 팔로워 수, 팔로잉 수 조회
         Long postCount = voteRepository.countByUser_UserId(userId);
         Long participatedCount = voteSelectRepository.countByUserId(userId);
-        Long followerCount = followRepository.countByFollowing(user);
-        Long followingCount = followRepository.countByFollower(user);
 
-        // 7. DTO 조립 및 반환
+        // 3. DTO 조립 및 반환
         return UserPageDto.builder()
                 .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .introduction(user.getIntroduction())
                 .point(user.getPoint())
-                .posts(voteDto)
                 .postCount(postCount)
                 .participatedCount(participatedCount)
-                .followerCount(followerCount)
-                .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
 
     // [다른 유저 페이지 조회] - userId 기준으로 프로필과 게시글을 조회
-    public UserPageDto getUserPage(Long userId, Pageable pageable) {
+    public OtherUserPageDto getUserPage(Long userId, Pageable pageable) {
         // 1. 대상 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
@@ -122,12 +99,11 @@ public class UserService {
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
-        Long participatedCount = voteSelectRepository.countByUserId(userId);
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
         // 6. 사용자 페이지 DTO 반환
-        return UserPageDto.builder()
+        return OtherUserPageDto.builder()
                 .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
@@ -135,7 +111,6 @@ public class UserService {
                 .point(user.getPoint())
                 .posts(voteDto)
                 .postCount(postCount)
-                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())

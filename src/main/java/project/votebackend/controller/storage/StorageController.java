@@ -48,4 +48,13 @@ public class StorageController {
     ) {
         return ResponseEntity.ok(PageResponseUtil.toResponse(storageService.getBookmarkedPosts(userDetails.getId(), pageable)));
     }
+
+    //내가 작성한 게시물 불러오기
+    @GetMapping("/created")
+    public ResponseEntity<Map<String, Object>> getCreatedPosts(
+            @AuthenticationPrincipal CustumUserDetails userDetails,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(PageResponseUtil.toResponse(storageService.getCreatedPosts(userDetails.getId(), pageable)));
+    }
 }

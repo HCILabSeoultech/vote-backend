@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.domain.user.User;
+import project.votebackend.dto.user.OtherUserPageDto;
 import project.votebackend.dto.user.UserPageDto;
 import project.votebackend.dto.user.UserResponseDto;
 import project.votebackend.dto.user.UserUpdateDto;
@@ -25,22 +26,21 @@ public class UserController {
     //마이페이지 조회
     @GetMapping("/mypage")
     public ResponseEntity<UserPageDto> getMyPage(
-            @AuthenticationPrincipal CustumUserDetails userDetails,
-            @PageableDefault(size = 10) Pageable pageable
+            @AuthenticationPrincipal CustumUserDetails userDetails
     ) {
-        UserPageDto dto = userService.getMyPage(userDetails.getId(), pageable);
+        UserPageDto dto = userService.getMyPage(userDetails.getId());
         return ResponseEntity.ok(dto);
     }
 
     //다른 사용자 조회
     @GetMapping("/{userId}")
-    public ResponseEntity<UserPageDto> getUserPage(
+    public ResponseEntity<OtherUserPageDto> getUserPage(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        UserPageDto userPage = userService.getUserPage(userId, PageRequest.of(page, size));
-        return ResponseEntity.ok(userPage);
+        OtherUserPageDto otherUserPage = userService.getUserPage(userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(otherUserPage);
     }
 
     //회원정보 수정

@@ -9,14 +9,16 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class UserPageDto {
+public class OtherUserPageDto {
 
     private String username;
     private String name;
     private String profileImage;
     private String introduction;
     private Long point;
+    private Long followerCount;
+    private Long followingCount;
     private Long postCount;
-    private Long participatedCount;
     private LocalDateTime createdAt;
+    private Page<LoadVoteDto> posts;
 }

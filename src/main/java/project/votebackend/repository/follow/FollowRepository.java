@@ -27,4 +27,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     // 내가 특정 유저들을 팔로우하고 있는지 여부 확인용 (userId → follower, followerIds → following)
     List<Follow> findByFollower_UserIdAndFollowing_UserIdIn(Long followerId, List<Long> followingIds);
+
 }

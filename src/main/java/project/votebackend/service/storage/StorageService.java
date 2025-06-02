@@ -43,4 +43,12 @@ public class StorageService {
         Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
         return voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, pageable);
     }
+
+    //내가 작성한 게시물
+    public Page<LoadVoteDto> getCreatedPosts(Long userId, Pageable pageable) {
+        Page<Vote> votes = voteRepository.findByUser_UserId(userId, pageable);
+        List<Long> voteIds = votes.getContent().stream().map(Vote::getVoteId).toList();
+        Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
+        return voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, pageable);
+    }
 }
