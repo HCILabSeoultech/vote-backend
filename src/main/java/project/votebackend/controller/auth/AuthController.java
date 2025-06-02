@@ -3,11 +3,14 @@ package project.votebackend.controller.auth;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.login.LoginRequest;
 import project.votebackend.dto.signup.UserSignupDto;
+import project.votebackend.dto.user.UserUpdateDto;
+import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.auth.AuthService;
 
 import java.util.Map;

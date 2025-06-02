@@ -1,35 +1,53 @@
 package project.votebackend.service.user;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
+import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
+import project.votebackend.dto.user.UserUpdateDto;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.dto.user.UserPageDto;
+import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.exception.AuthException;
+import project.votebackend.exception.CategoryException;
+import project.votebackend.repository.category.CategoryRepository;
 import project.votebackend.repository.follow.FollowRepository;
+import project.votebackend.repository.user.UserInterestRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
+import project.votebackend.service.file.FileManagingService;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.util.VoteStatisticsUtil;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final FollowRepository followRepository;
     private final VoteSelectRepository voteSelectRepository;
     private final VoteStatisticsUtil voteStatisticsUtil;
+    private final UserInterestRepository userInterestRepository;
+    private final CategoryRepository categoryRepository;
+    private final FileManagingService fileManagingService;
+    private final ElasticsearchClient elasticsearchClient;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
     public UserPageDto getMyPage(Long userId, Pageable pageable) {
@@ -123,4 +141,60 @@ public class UserService {
                 .build();
     }
 
+    //회원정보 수정
+    @Transactional
+    public User updateUser(Long userId, UserUpdateDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        // 새 프로필 이미지가 있을 때
+        if (dto.getProfileImage() != null) {
+            String newImage = dto.getProfileImage();
+            String oldImage = user.getProfileImage();
+
+            // 기존 이미지가 default가 아니고, 변경된 경우에만 삭제
+            if (!Objects.equals(oldImage, "default.png") && !Objects.equals(newImage, oldImage)) {
+                fileManagingService.deleteImage(oldImage);  // S3에서 삭제
+            }
+
+            user.setProfileImage(newImage);  // 새 이미지로 변경
+
+            // 이름 수정
+            if (dto.getName() != null) {
+                user.setName(dto.getName());
+            }
+
+            // 자기소개 수정
+            if (dto.getIntroduction() != null) {
+                user.setIntroduction(dto.getIntroduction());
+            }
+
+            // 관심 카테고리 삭제 후 다시 저장
+            userInterestRepository.deleteByUser(user);
+
+            if (dto.getInterestCategory() != null) {
+                for (Long categoryId : dto.getInterestCategory()) {
+                    Category category = categoryRepository.findById(categoryId)
+                            .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+                    UserInterest interest = UserInterest.builder()
+                            .user(user)
+                            .category(category)
+                            .build();
+                    userInterestRepository.save(interest);
+                }
+            }
+
+            // Elasticsearch 동기화
+            try {
+                elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
+                elasticsearchClient.index(i -> i
+                        .index("users")
+                        .id(String.valueOf(user.getUserId()))
+                        .document(UserDocument.fromEntity(user)));
+            } catch (IOException e) {
+                log.error("Elasticsearch 업데이트 실패", e);
+            }
+        }
+        return user;
+    }
 }
