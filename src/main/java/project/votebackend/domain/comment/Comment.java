@@ -2,6 +2,7 @@ package project.votebackend.domain.comment;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import project.votebackend.domain.BaseEntity;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.vote.Vote;
@@ -37,9 +38,11 @@ public class Comment extends BaseEntity {
 
     private int likeCount = 0;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 50)
     private List<Comment> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 50)
     private List<CommentLike> commentLikes = new ArrayList<>();
 }
