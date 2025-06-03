@@ -47,78 +47,6 @@ public class LoadVoteDto {
     private int totalVotes;
     private Long selectedOptionId;
 
-    // Vote 엔티티를 DTO로 변환하는 기본 메서드 (DB 직접 조회 방식 사용)
-    // 추후 수정하야할 부분
-    public static LoadVoteDto fromEntity(Vote vote, Long currentUserId, VoteSelectRepository voteSelectRepository) {
-        // 부모 댓글 개수 계산 (대댓글 제외)
-        int commentCount = vote.getComments() != null
-                ? (int) vote.getComments().stream()
-                .filter(c -> c.getParent() == null)
-                .count()
-                : 0;
-
-        // 좋아요 수 계산
-        int likeCount = (int) vote.getReactions().stream()
-                .filter(r -> r.getReaction() == ReactionType.LIKE)
-                .distinct()
-                .count();
-
-        // 현재 사용자가 좋아요를 눌렀는지 여부
-        boolean isLiked = vote.getReactions().stream()
-                .anyMatch(r -> r.getUser().getUserId().equals(currentUserId)
-                        && r.getReaction() == ReactionType.LIKE);
-
-        // 현재 사용자가 북마크 했는지 여부
-        boolean isBookmarked = vote.getReactions().stream()
-                .anyMatch(r -> r.getUser().getUserId().equals(currentUserId)
-                        && r.getReaction() == ReactionType.BOOKMARK);
-
-        // 이미지 목록 변환
-        List<VoteImageDto> images = vote.getImages().stream()
-                .map(VoteImageDto::fromEntity)
-                .collect(Collectors.toList());
-
-        // 각 옵션별 투표 수 계산
-        List<VoteOptionDto> voteOptions = vote.getOptions().stream()
-                .sorted(Comparator.comparing(VoteOption::getOptionId)) // 옵션 순서 고정
-                .map(option -> {
-                    int voteCount = voteSelectRepository.countByOptionId(option.getOptionId()); // DB에서 옵션별 투표 수 조회
-                    return VoteOptionDto.fromEntity(option, voteCount);
-                })
-                .collect(Collectors.toList());
-
-        // 전체 투표 수 계산
-        int totalVotes = voteOptions.stream()
-                .mapToInt(VoteOptionDto::getVoteCount)
-                .sum();
-
-        // 사용자가 선택한 옵션 ID 조회
-        Optional<Long> selectedOptionId = voteSelectRepository
-                .findOptionIdByVoteIdAndUserId(vote.getVoteId(), currentUserId);
-
-        // DTO 생성 및 반환
-        return LoadVoteDto.builder()
-                .voteId(vote.getVoteId())
-                .title(vote.getTitle())
-                .content(vote.getContent())
-                .categoryName(vote.getCategory().getName())
-                .userId(vote.getUser().getUserId())
-                .username(vote.getUser().getUsername())
-                .name(vote.getUser().getName())
-                .createdAt(vote.getCreatedAt())
-                .finishTime(vote.getFinishTime())
-                .images(images)
-                .voteOptions(voteOptions)
-                .commentCount(commentCount)
-                .likeCount(likeCount)
-                .isLiked(isLiked)
-                .profileImage(vote.getUser().getProfileImage())
-                .isBookmarked(isBookmarked)
-                .totalVotes(totalVotes)
-                .selectedOptionId(selectedOptionId.orElse(null)) // 선택 안했으면 null
-                .build();
-    }
-
     // 쿼리 최적화를 위해 미리 계산된 통계 맵을 사용하는 변환 메서드
     public static LoadVoteDto fromEntityWithAllMaps(
             Vote vote,
@@ -184,5 +112,4 @@ public class LoadVoteDto {
                 .selectedOptionId(selectedOptionId.orElse(null))
                 .build();
     }
-
 }

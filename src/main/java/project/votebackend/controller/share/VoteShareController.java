@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.security.CustumUserDetails;
+import project.votebackend.service.vote.VoteLoadService;
 import project.votebackend.service.vote.VoteService;
 
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.Map;
 @RequestMapping("/share/vote")
 public class VoteShareController {
 
-    private final VoteService voteService;
+    private final VoteLoadService voteLoadService;
 
     //투표 링크 복사
     @GetMapping("/link/{voteId}")
@@ -34,7 +35,7 @@ public class VoteShareController {
             @AuthenticationPrincipal CustumUserDetails userDetails // null일 수 있음
     ) {
         Long userId = (userDetails != null) ? userDetails.getId() : null;
-        LoadVoteDto voteDto = voteService.getVoteById(voteId, userId);
+        LoadVoteDto voteDto = voteLoadService.getVoteById(voteId, userId);
         return ResponseEntity.ok(voteDto);
     }
 }

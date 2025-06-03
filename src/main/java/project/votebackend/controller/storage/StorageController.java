@@ -31,15 +31,6 @@ public class StorageController {
         return ResponseEntity.ok(PageResponseUtil.toResponse(storageService.getVotedPosts(userDetails.getId(), pageable)));
     }
 
-    //좋아요한 게시물 불러오기
-    @GetMapping("/liked")
-    public ResponseEntity<Map<String, Object>> getLikedPosts(
-            @AuthenticationPrincipal CustumUserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        return ResponseEntity.ok(PageResponseUtil.toResponse(storageService.getLikedPosts(userDetails.getId(), pageable)));
-    }
-
     //북마크한 게시물 불러오기
     @GetMapping("/bookmarked")
     public ResponseEntity<Map<String, Object>> getBookmarkedPosts(
