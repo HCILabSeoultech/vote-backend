@@ -21,6 +21,7 @@ import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.voteStat.VoteStat6hRepository;
 import project.votebackend.repository.voteStat.VoteStatHourlyRepository;
 import project.votebackend.type.ErrorCode;
+import project.votebackend.type.VoteStatus;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -54,6 +55,7 @@ public class VoteService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .finishTime(request.getFinishTime())
+                .status(VoteStatus.DRAFT)
                 .build();
 
         vote.setUser(user);
@@ -97,6 +99,31 @@ public class VoteService {
         }
 
         return savedVote;
+    }
+
+    // 투표 업로드
+    @Transactional
+    public void publishVote(Long voteId, Long userId) {
+        Vote vote = voteRepository.findById(voteId)
+                .orElseThrow(() -> new VoteException(ErrorCode.VOTE_NOT_FOUND));
+
+        if (!vote.getUser().getUserId().equals(userId)) {
+            throw new AuthException(ErrorCode.USER_NOT_MATCHED);
+        }
+
+        vote.setStatus(VoteStatus.PUBLISHED);
+
+        // 게시할 때 Elasticsearch 저장
+        try {
+            VoteDocument doc = VoteDocument.fromEntity(vote);
+            elasticsearchClient.index(i -> i
+                    .index("votes")
+                    .id(String.valueOf(doc.getId()))
+                    .document(doc)
+            );
+        } catch (IOException e) {
+            log.error("Elasticsearch 저장 실패", e);
+        }
     }
 
     // 투표 재업로드

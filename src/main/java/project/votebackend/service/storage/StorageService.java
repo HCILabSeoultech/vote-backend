@@ -28,14 +28,6 @@ public class StorageService {
         return voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, pageable);
     }
 
-    //좋아요한 게시물
-    public Page<LoadVoteDto> getLikedPosts(Long userId, Pageable pageable) {
-        Page<Vote> votes = voteRepository.findLikedVotes(userId, pageable);
-        List<Long> voteIds = votes.getContent().stream().map(Vote::getVoteId).toList();
-        Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
-        return voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, pageable);
-    }
-
     //북마크한 게시물
     public Page<LoadVoteDto> getBookmarkedPosts(Long userId, Pageable pageable) {
         Page<Vote> votes = voteRepository.findBookmarkedVotes(userId, pageable);

@@ -21,15 +21,24 @@ public class VoteController {
 
     private final VoteService voteService;
 
-    //투표 생성
+    // 투표 저장
     @PostMapping("/create")
     public ResponseEntity<?> createVote(
             @RequestBody CreateVoteRequest request,
             @AuthenticationPrincipal CustumUserDetails userDetails
     ) {
         Vote created = voteService.createVote(request, userDetails.getId());
-        CreateVoteResponse response = new CreateVoteResponse("success", created.getVoteId());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new CreateVoteResponse("success", created.getVoteId()));
+    }
+
+    // 투표 업로드
+    @PostMapping("/publish/{voteId}")
+    public ResponseEntity<?> publishVote(
+            @PathVariable Long voteId,
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        voteService.publishVote(voteId, userDetails.getId());
+        return ResponseEntity.ok("success");
     }
 
     // 투표 재업로드

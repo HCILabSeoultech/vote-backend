@@ -26,19 +26,19 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     @Query(value = """
         (
           SELECT v.* FROM vote v 
-          WHERE v.user_id = :userId
+          WHERE v.user_id = :userId AND v.status = 'PUBLISHED'
         )
         UNION
         (
           SELECT v.* FROM vote v 
-          WHERE v.category_id IN (:categoryIds)
+          WHERE v.category_id IN (:categoryIds) AND v.status = 'PUBLISHED'
         )
         UNION
         (
           SELECT v.* FROM vote v 
           WHERE v.user_id IN (
             SELECT f.following_id FROM follow f WHERE f.follower_id = :userId
-          )
+          ) AND v.status = 'PUBLISHED'
         )
         ORDER BY created_at DESC
         LIMIT :limit OFFSET :offset
@@ -64,12 +64,25 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     //메인페이지 글 개수 count
     @Query(value = """
-        SELECT COUNT(DISTINCT v.vote_id)
-        FROM vote v
-        LEFT JOIN follow f ON f.following_id = v.user_id
-        WHERE v.user_id = :userId
-           OR v.category_id IN (:categoryIds)
-           OR f.follower_id = :userId
+        SELECT COUNT(*) FROM (
+            SELECT v.vote_id FROM vote v
+            WHERE v.user_id = :userId
+              AND v.status = 'PUBLISHED'
+    
+            UNION
+    
+            SELECT v.vote_id FROM vote v
+            WHERE v.category_id IN (:categoryIds)
+              AND v.status = 'PUBLISHED'
+    
+            UNION
+    
+            SELECT v.vote_id FROM vote v
+            WHERE v.user_id IN (
+                SELECT f.following_id FROM follow f WHERE f.follower_id = :userId
+            )
+              AND v.status = 'PUBLISHED'
+        ) AS count_table
         """, nativeQuery = true)
     long countMainPageVotes(
             @Param("userId") Long userId,
@@ -83,23 +96,10 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     @Query("""
         SELECT DISTINCT v FROM Vote v
         JOIN v.selections s
-        WHERE s.user.userId = :userId
+        WHERE s.user.userId = :userId AND v.status = 'PUBLISHED'
         ORDER BY v.createdAt DESC
     """)
     Page<Vote> findVotedByUserId(@Param("userId") Long userId, Pageable pageable);
-
-    //내가 좋아요한 글
-    @EntityGraph(attributePaths = {
-            "category", "user"
-    })
-    @Query("""
-        SELECT DISTINCT v FROM Vote v
-        JOIN v.reactions r
-        WHERE r.user.userId = :userId AND r.reaction = 'LIKE'
-        ORDER BY v.createdAt DESC
-    """)
-    Page<Vote> findLikedVotes(@Param("userId") Long userId, Pageable pageable);
-
 
     //내가 북마크한 글
     @EntityGraph(attributePaths = {
@@ -108,7 +108,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     @Query("""
         SELECT DISTINCT v FROM Vote v
         JOIN v.reactions r
-        WHERE r.user.userId = :userId AND r.reaction = 'BOOKMARK'
+        WHERE r.user.userId = :userId AND r.reaction = 'BOOKMARK' AND v.status = 'PUBLISHED'
         ORDER BY v.createdAt DESC
     """)
     Page<Vote> findBookmarkedVotes(@Param("userId") Long userId, Pageable pageable);
