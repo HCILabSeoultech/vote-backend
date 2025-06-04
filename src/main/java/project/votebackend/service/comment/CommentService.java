@@ -51,10 +51,7 @@ public class CommentService {
     }
 
     // 댓글 조회
-    public Page<CommentResponse> getComments(Long voteId, String username, int page, int size) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
-
+    public Page<CommentResponse> getComments(Long voteId, Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createdAt")); // 오래된 순 정렬
 
         // 부모 댓글만 페이징
@@ -66,7 +63,8 @@ public class CommentService {
                     // 대댓글 전체 조회
                     List<Comment> replies = commentRepository.findByParent_CommentIdOrderByCreatedAtAsc(parent.getCommentId());
 
-                    return CommentResponse.fromEntityWithReplies(parent, replies, user.getUserId());
+                    // userId가 null이면 비로그인 사용자 → 개인화 정보 없이 처리
+                    return CommentResponse.fromEntityWithReplies(parent, replies, userId);
                 })
                 .collect(Collectors.toList());
 

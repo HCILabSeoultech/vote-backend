@@ -43,9 +43,9 @@ public class CommentController {
             @PathVariable Long voteId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal UserDetails userDetails
+            @RequestParam(required = false) Long userId
     ) {
-        Page<CommentResponse> comments = commentService.getComments(voteId, userDetails.getUsername(), page, size);
+        Page<CommentResponse> comments = commentService.getComments(voteId, userId, page, size);
         return ResponseEntity.ok(PageResponseUtil.toResponse(comments));
     }
 
