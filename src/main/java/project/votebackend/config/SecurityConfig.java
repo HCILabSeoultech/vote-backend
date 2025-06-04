@@ -3,6 +3,7 @@ package project.votebackend.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -33,15 +34,30 @@ public class SecurityConfig {
                 // 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입, 공유 등의 인증 없이 접근 가능한 엔드포인트
-                        .requestMatchers("/location/verify","/auth/**", "/image/upload", "/share/vote/**", "/email/**").permitAll()
+                        .requestMatchers("/location/verify","/auth/**", "/image/upload", "/share/vote/**",
+                                "/email/**", "/result/**").permitAll()
+
+                        // 댓글 조회만 허용
+                        .requestMatchers(HttpMethod.GET, "/comment/**").permitAll()
+
+                        // 나머지 댓글 관련은 인증 필요
+                        .requestMatchers(HttpMethod.POST, "/comment/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/comment/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/comment/**").authenticated()
+
+                        // 유저 조회만 허용
+                        .requestMatchers(HttpMethod.GET, "/user/**").permitAll()
+
+                        // 나머지 유저 관련은 인증 필요
+                        .requestMatchers(HttpMethod.POST, "/user/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/user/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/user/**").authenticated()
 
                         // 아래 엔드포인트는 인증된 사용자만 접근 가능
                         .requestMatchers(
                                 "/vote/**",         // 투표 관련
                                 "/reaction/**",     // 좋아요/북마크 등 반응
                                 "/storage/**",      // 저장소 관련
-                                "/user/**",          // 유저 관련
-                                "/comment/**",       // 댓글
                                 "/comment-like/**",  // 댓글 좋아요
                                 "/search/**",        // 검색
                                 "/follow/**",         // 팔로우

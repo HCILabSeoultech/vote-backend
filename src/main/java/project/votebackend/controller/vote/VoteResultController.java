@@ -12,7 +12,7 @@ import project.votebackend.service.vote.VoteResultService;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/vote")
+@RequestMapping("/result")
 @RequiredArgsConstructor
 public class VoteResultController {
 
