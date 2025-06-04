@@ -3,6 +3,7 @@ package project.votebackend.repository.voteStat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,8 @@ public interface VoteStatHourlyRepository extends JpaRepository<VoteStatHourly, 
 
     // 해당 시간 통계 삭제
     void deleteByStatHour(LocalDateTime statHour);
+
+    @Modifying
+    @Query("DELETE FROM VoteStatHourly v WHERE v.vote.voteId = :voteId")
+    void deleteByVoteId(@Param("voteId") Long voteId);
 }

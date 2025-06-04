@@ -3,19 +3,12 @@ package project.votebackend.service.vote;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
-import project.votebackend.domain.vote.Vote;
-import project.votebackend.domain.vote.VoteImage;
-import project.votebackend.domain.vote.VoteOption;
+import project.votebackend.domain.vote.*;
 import project.votebackend.dto.vote.CreateVoteRequest;
-import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.elasticSearch.VoteDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
@@ -25,15 +18,13 @@ import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteImageRepository;
 import project.votebackend.repository.vote.VoteOptionRepository;
 import project.votebackend.repository.vote.VoteRepository;
-import project.votebackend.repository.vote.VoteSelectRepository;
+import project.votebackend.repository.voteStat.VoteStat6hRepository;
+import project.votebackend.repository.voteStat.VoteStatHourlyRepository;
 import project.votebackend.type.ErrorCode;
-import project.votebackend.type.ReactionType;
-import project.votebackend.util.VoteStatisticsUtil;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,11 +35,11 @@ public class VoteService {
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final VoteSelectRepository voteSelectRepository;
     private final VoteOptionRepository voteOptionRepository;
     private final ElasticsearchClient elasticsearchClient;
     private final VoteImageRepository voteImageRepository;
-    private final VoteStatisticsUtil voteStatisticsUtil;
+    private final VoteStat6hRepository voteStat6hRepository;
+    private final VoteStatHourlyRepository voteStatHourlyRepository;
 
     //투표 생성
     @Transactional
@@ -171,6 +162,9 @@ public class VoteService {
         if (!vote.getUser().getUsername().equals(username)) {
             throw new AuthException(ErrorCode.USER_NOT_MATCHED);
         }
+
+        voteStatHourlyRepository.deleteByVoteId(voteId);
+        voteStat6hRepository.deleteByVoteId(voteId);
 
         voteRepository.delete(vote);
 
