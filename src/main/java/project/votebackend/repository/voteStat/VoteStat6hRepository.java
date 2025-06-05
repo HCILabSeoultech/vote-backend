@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.vote.VoteStat6h;
 
 import java.time.LocalDateTime;
@@ -45,7 +46,8 @@ public interface VoteStat6hRepository extends JpaRepository<VoteStat6h, Long> {
     //해당 시간 통계 삭제
     void deleteByStatTime(LocalDateTime statTime);
 
+    @Transactional
     @Modifying
-    @Query("DELETE FROM VoteStatHourly v WHERE v.vote.voteId = :voteId")
+    @Query(value = "DELETE FROM vote_stat_6h WHERE vote_id = :voteId", nativeQuery = true)
     void deleteByVoteId(@Param("voteId") Long voteId);
 }

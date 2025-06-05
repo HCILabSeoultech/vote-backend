@@ -189,9 +189,16 @@ public class VoteService {
         if (!vote.getUser().getUsername().equals(username)) {
             throw new AuthException(ErrorCode.USER_NOT_MATCHED);
         }
-
+        System.out.println("1h start");
         voteStatHourlyRepository.deleteByVoteId(voteId);
+        voteStatHourlyRepository.flush();
+        System.out.println("1h end");
+
+        System.out.println("6h start");
         voteStat6hRepository.deleteByVoteId(voteId);
+        voteStat6hRepository.flush();
+        System.out.println("6h end");
+
 
         voteRepository.delete(vote);
 
