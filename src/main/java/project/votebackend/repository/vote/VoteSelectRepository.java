@@ -72,4 +72,6 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
         GROUP BY u.address, vo.option
     """)
     List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
+
+    void deleteByVote_VoteId(Long voteId);
 }

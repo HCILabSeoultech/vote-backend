@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.vote.CreateVoteRequest;
 import project.votebackend.dto.vote.CreateVoteResponse;
+import project.votebackend.dto.vote.UpdateVoteRequest;
 import project.votebackend.dto.vote.VoteReuploadRequest;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.vote.VoteService;
@@ -55,6 +56,15 @@ public class VoteController {
     public ResponseEntity<?> deleteVote(@PathVariable Long voteId,
                                         @AuthenticationPrincipal UserDetails userDetails) {
         voteService.deleteVote(voteId, userDetails.getUsername());
+        return ResponseEntity.ok("success");
+    }
+
+    // 투표 수정
+    @PatchMapping("/{voteId}")
+    public ResponseEntity<?> updateVote(@PathVariable Long voteId,
+                                        @AuthenticationPrincipal UserDetails userDetails,
+                                        @RequestBody UpdateVoteRequest request) {
+        voteService.updateVote(voteId, userDetails.getUsername(), request);
         return ResponseEntity.ok("success");
     }
 }

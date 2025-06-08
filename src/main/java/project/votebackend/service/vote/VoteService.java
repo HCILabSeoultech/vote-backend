@@ -9,6 +9,8 @@ import project.votebackend.domain.category.Category;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.vote.*;
 import project.votebackend.dto.vote.CreateVoteRequest;
+import project.votebackend.dto.vote.UpdateVoteRequest;
+import project.votebackend.dto.vote.VoteOptionDto;
 import project.votebackend.elasticSearch.VoteDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
@@ -18,6 +20,7 @@ import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteImageRepository;
 import project.votebackend.repository.vote.VoteOptionRepository;
 import project.votebackend.repository.vote.VoteRepository;
+import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.repository.voteStat.VoteStat6hRepository;
 import project.votebackend.repository.voteStat.VoteStatHourlyRepository;
 import project.votebackend.type.ErrorCode;
@@ -41,6 +44,7 @@ public class VoteService {
     private final VoteImageRepository voteImageRepository;
     private final VoteStat6hRepository voteStat6hRepository;
     private final VoteStatHourlyRepository voteStatHourlyRepository;
+    private final VoteSelectRepository voteSelectRepository;
 
     //투표 생성
     @Transactional
@@ -84,21 +88,21 @@ public class VoteService {
             vote.setImages(images);
         }
 
-        Vote savedVote = voteRepository.save(vote);
+        return voteRepository.save(vote);
 
         //Elasticsearch에 저장
-        try {
-            VoteDocument doc = VoteDocument.fromEntity(savedVote);
-            elasticsearchClient.index(i -> i
-                    .index("votes")
-                    .id(String.valueOf(doc.getId()))
-                    .document(doc)
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 저장 실패", e);
-        }
+//        try {
+//            VoteDocument doc = VoteDocument.fromEntity(savedVote);
+//            elasticsearchClient.index(i -> i
+//                    .index("votes")
+//                    .id(String.valueOf(doc.getId()))
+//                    .document(doc)
+//            );
+//        } catch (IOException e) {
+//            log.error("Elasticsearch 저장 실패", e);
+//        }
 
-        return savedVote;
+//        return savedVote;
     }
 
     // 투표 업로드
@@ -207,5 +211,63 @@ public class VoteService {
             log.error("Elasticsearch 삭제 실패", e);
 
         }
+    }
+
+    // 투표 수정
+    @Transactional
+    public void updateVote(Long voteId, String username, UpdateVoteRequest request) {
+        Vote vote = voteRepository.findById(voteId)
+                .orElseThrow(() -> new VoteException(ErrorCode.VOTE_NOT_FOUND));
+
+        // 작성자 확인
+        if (!vote.getUser().getUsername().equals(username)) {
+            throw new AuthException(ErrorCode.USER_NOT_MATCHED);
+        }
+
+        // 카테고리 변경
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+            vote.setCategory(category);
+        }
+
+        // 기본 필드 수정
+        vote.setTitle(request.getTitle());
+        vote.setContent(request.getContent());
+        vote.setLink(request.getLink());
+        vote.setFinishTime(request.getFinishTime());
+
+        // 기존 옵션에 대한 투표 기록 삭제
+        voteSelectRepository.deleteByVote_VoteId(voteId);
+
+        // 기존 옵션 삭제
+        voteOptionRepository.deleteByVote_VoteId(voteId);
+        vote.getOptions().clear();
+
+        // 새로운 옵션 추가
+        if (request.getOptions() != null) {
+            for (VoteOptionDto opt : request.getOptions()) {
+                VoteOption option = new VoteOption();
+                option.setVote(vote);
+                option.setOption(opt.getContent());
+                option.setOptionImage(opt.getOptionImage());
+                vote.getOptions().add(option);
+            }
+        }
+
+        // 기존 이미지 삭제
+        vote.getImages().clear();
+
+        // 새로운 이미지 추가
+        if (request.getImageUrls() != null) {
+            for (String url : request.getImageUrls()) {
+                VoteImage img = new VoteImage();
+                img.setVote(vote);
+                img.setImageUrl(url);
+                vote.getImages().add(img);
+            }
+        }
+
+        voteRepository.save(vote);
     }
 }
