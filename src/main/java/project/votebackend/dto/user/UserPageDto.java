@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import project.votebackend.dto.vote.LoadVoteDto;
+import project.votebackend.type.Grade;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ public class UserPageDto {
     private String name;
     private String profileImage;
     private String introduction;
+    private Grade grade;
     private Long point;
     private Long postCount;
     private Long participatedCount;
