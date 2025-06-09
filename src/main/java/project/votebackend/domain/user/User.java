@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import project.votebackend.domain.BaseEntity;
 import project.votebackend.type.Gender;
+import project.votebackend.type.Grade;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -51,6 +52,10 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Grade grade;
 
     @Column(nullable = false)
     private LocalDate birthdate;

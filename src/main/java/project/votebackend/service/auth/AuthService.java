@@ -19,6 +19,7 @@ import project.votebackend.repository.category.CategoryRepository;
 import project.votebackend.repository.user.UserInterestRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.type.ErrorCode;
+import project.votebackend.type.Grade;
 import project.votebackend.util.JwtUtil;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(dto.getPassword())) // 비밀번호 암호화
                 .name(dto.getName())
                 .gender(dto.getGender())
+                .grade(Grade.HUNDRED)
                 .phone(dto.getPhone())
                 .birthdate(dto.getBirthdate())
                 .address(dto.getAddress())
