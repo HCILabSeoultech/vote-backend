@@ -16,7 +16,8 @@ public class UserPageDto {
     private String name;
     private String profileImage;
     private String introduction;
-    private Grade grade;
+    private String grade;
+    private Long avgParticipantCount;
     private Long point;
     private Long postCount;
     private Long participatedCount;

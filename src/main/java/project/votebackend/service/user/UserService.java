@@ -26,6 +26,7 @@ import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.service.file.FileManagingService;
 import project.votebackend.type.ErrorCode;
+import project.votebackend.type.Grade;
 import project.votebackend.util.VoteStatisticsUtil;
 
 import java.io.IOException;
@@ -58,13 +59,18 @@ public class UserService {
         Long postCount = voteRepository.countByUser_UserId(userId);
         Long participatedCount = voteSelectRepository.countByUserId(userId);
 
+        // 등급 계산
+        long avg = calculateAverageParticipantCount(userId);
+        Grade dynamicGrade = Grade.fromAverage(avg);
+
         // 3. DTO 조립 및 반환
         return UserPageDto.builder()
                 .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .introduction(user.getIntroduction())
-                .grade(user.getGrade())
+                .grade(dynamicGrade.getLabel())
+                .avgParticipantCount(avg)
                 .point(user.getPoint())
                 .postCount(postCount)
                 .participatedCount(participatedCount)
@@ -100,6 +106,10 @@ public class UserService {
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
+        // 등급 계산
+        long avg = calculateAverageParticipantCount(userId);
+        Grade dynamicGrade = Grade.fromAverage(avg);
+
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
                 .username(user.getUsername())
@@ -107,13 +117,38 @@ public class UserService {
                 .profileImage(user.getProfileImage())
                 .introduction(user.getIntroduction())
                 .point(user.getPoint())
-                .grade(user.getGrade())
+                .grade(dynamicGrade.getLabel())
+                .avgParticipantCount(avg)
                 .posts(voteDto)
                 .postCount(postCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    // 평균 투표 수 계산
+    private long calculateAverageParticipantCount(Long userId) {
+        // 최근 10개 투표 가져오기
+        List<Vote> recentVotes = voteRepository.findTop10ByUser_UserIdOrderByCreatedAtDesc(userId);
+
+        if (recentVotes.isEmpty()) return 0;
+
+        // 투표 ID 리스트 추출
+        List<Long> voteIds = recentVotes.stream()
+                .map(Vote::getVoteId)
+                .toList();
+
+        // 참여자 수 조회 (참여자 없는 투표는 조회되지 않음)
+        Map<Long, Long> countMap = voteSelectRepository.countByVoteIdsGroupedIncludingZero(voteIds);
+
+        // 참여자 수 없는 투표는 0으로 간주하여 평균 계산
+        long total = 0L;
+        for (Long voteId : voteIds) {
+            total += countMap.getOrDefault(voteId, 0L);
+        }
+
+        return total / voteIds.size();
     }
 
     //회원정보 수정

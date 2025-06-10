@@ -16,7 +16,8 @@ public class OtherUserPageDto {
     private String name;
     private String profileImage;
     private String introduction;
-    private Grade grade;
+    private String grade;
+    private Long avgParticipantCount;
     private Long point;
     private Long followerCount;
     private Long followingCount;

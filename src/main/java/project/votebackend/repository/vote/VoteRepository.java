@@ -155,4 +155,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
         LEFT JOIN FETCH v.selections s
     """)
     List<Vote> findAllWithSelections();
+
+    // 최근 10개의 투표 조회
+    List<Vote> findTop10ByUser_UserIdOrderByCreatedAtDesc(Long userId);
 }

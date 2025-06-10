@@ -8,7 +8,9 @@ import project.votebackend.domain.user.User;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.domain.vote.VoteSelection;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -74,4 +76,25 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
 
     void deleteByVote_VoteId(Long voteId);
+
+    // 평균 투표 수 계산
+    @Query("SELECT vs.vote.voteId, COUNT(vs) FROM VoteSelection vs WHERE vs.vote.voteId IN :voteIds GROUP BY vs.vote.voteId")
+    List<Object[]> countRawByVoteIdsGrouped(@Param("voteIds") List<Long> voteIds);
+
+    default Map<Long, Long> countByVoteIdsGroupedIncludingZero(List<Long> voteIds) {
+        List<Object[]> raw = countRawByVoteIdsGrouped(voteIds);
+        Map<Long, Long> resultMap = new HashMap<>();
+
+        // 0으로 초기화
+        for (Long voteId : voteIds) {
+            resultMap.put(voteId, 0L);
+        }
+
+        // 참여자 수가 있는 경우 덮어쓰기
+        for (Object[] row : raw) {
+            resultMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        return resultMap;
+    }
 }
