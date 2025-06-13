@@ -256,16 +256,16 @@ public class VoteService {
         }
 
         // 기존 이미지 삭제
+        voteImageRepository.deleteByVote_VoteId(voteId);
         vote.getImages().clear();
 
-        // 새로운 이미지 추가
-        if (request.getImageUrls() != null) {
-            for (String url : request.getImageUrls()) {
-                VoteImage img = new VoteImage();
-                img.setVote(vote);
-                img.setImageUrl(url);
-                vote.getImages().add(img);
-            }
+        // 첫 번째 이미지만 추가
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            String url = request.getImageUrls().get(0);
+            VoteImage img = new VoteImage();
+            img.setVote(vote);
+            img.setImageUrl(url);
+            vote.getImages().add(img);
         }
 
         voteRepository.save(vote);
