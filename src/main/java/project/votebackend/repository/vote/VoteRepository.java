@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.type.ReactionType;
+import project.votebackend.type.VoteStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,10 +20,13 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     //내가 작성한 글
     Page<Vote> findByUser_UserId(Long userId, Pageable pageable);
 
+    //다른 사용자가 작성한
+    Page<Vote> findByUser_UserIdAndStatus(Long userId, VoteStatus voteState, Pageable pageable);
+
     //사용자의 게시글 개수
     Long countByUser_UserId(Long userId);
 
-    //작성한 글 + 내가 선택한 관심사 + 팔로우한 사람의 글
+    //작성한 글 + 내가 선택글 관심사 + 팔로우한 사람의 글
     @Query(value = """
         (
           SELECT v.* FROM vote v 

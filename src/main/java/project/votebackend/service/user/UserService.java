@@ -27,6 +27,7 @@ import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.service.file.FileManagingService;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.type.Grade;
+import project.votebackend.type.VoteStatus;
 import project.votebackend.util.VoteStatisticsUtil;
 
 import java.io.IOException;
@@ -92,7 +93,7 @@ public class UserService {
         );
 
         // 3. 해당 사용자의 투표글 조회
-        Page<Vote> votes = voteRepository.findByUser_UserId(userId, sortedPageable);
+        Page<Vote> votes = voteRepository.findByUser_UserIdAndStatus(userId, VoteStatus.PUBLISHED, sortedPageable);
         List<Long> voteIds = votes.getContent().stream()
                 .map(Vote::getVoteId)
                 .toList();
