@@ -9,6 +9,7 @@ import project.votebackend.domain.comment.Comment;
 import project.votebackend.domain.reaction.Reaction;
 import project.votebackend.domain.user.User;
 import project.votebackend.type.VoteStatus;
+import project.votebackend.type.VoteType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +44,9 @@ public class Vote extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private VoteStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private VoteType voteType;
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)

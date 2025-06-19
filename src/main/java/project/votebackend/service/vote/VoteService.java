@@ -25,6 +25,7 @@ import project.votebackend.repository.voteStat.VoteStat6hRepository;
 import project.votebackend.repository.voteStat.VoteStatHourlyRepository;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.type.VoteStatus;
+import project.votebackend.type.VoteType;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -55,11 +56,19 @@ public class VoteService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        VoteType voteType;
+        try {
+            voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+        }
+
         Vote vote = Vote.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .finishTime(request.getFinishTime())
                 .status(VoteStatus.DRAFT)
+                .voteType(voteType)
                 .build();
 
         vote.setUser(user);
@@ -146,6 +155,7 @@ public class VoteService {
         newVote.setContent(original.getContent());
         newVote.setCategory(original.getCategory());
         newVote.setUser(original.getUser());
+        newVote.setVoteType(original.getVoteType());
         newVote.setFinishTime(newFinishTime);
         voteRepository.save(newVote);
 
@@ -231,10 +241,18 @@ public class VoteService {
             vote.setCategory(category);
         }
 
+        VoteType voteType;
+        try {
+            voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+        }
+
         // 기본 필드 수정
         vote.setTitle(request.getTitle());
         vote.setContent(request.getContent());
         vote.setLink(request.getLink());
+        vote.setVoteType(voteType);
         vote.setFinishTime(request.getFinishTime());
 
         // 기존 옵션에 대한 투표 기록 삭제

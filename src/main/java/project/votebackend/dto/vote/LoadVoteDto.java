@@ -10,6 +10,7 @@ import project.votebackend.domain.vote.VoteOption;
 import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ReactionType;
 import project.votebackend.type.VoteStatus;
+import project.votebackend.type.VoteType;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -40,6 +41,7 @@ public class LoadVoteDto {
     private int likeCount;
     private String profileImage;
     private VoteStatus voteStatus;
+    private VoteType voteType;
 
     @JsonProperty("isBookmarked")
     private boolean isBookmarked;
@@ -112,6 +114,7 @@ public class LoadVoteDto {
                 .profileImage(vote.getUser().getProfileImage())
                 .totalVotes(totalVotes)
                 .voteStatus(vote.getStatus())
+                .voteType(vote.getVoteType())
                 .selectedOptionId(selectedOptionId.orElse(null))
                 .build();
     }
