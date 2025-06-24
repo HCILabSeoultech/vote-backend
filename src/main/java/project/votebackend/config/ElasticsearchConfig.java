@@ -17,7 +17,7 @@ public class ElasticsearchConfig {
         // Elasticsearch 서버가 실행 중인 호스트와 포트를 설정합니다.
         // 현재는 로컬호스트(localhost)의 9200 포트를 사용합니다.
         return RestClient.builder(
-                new HttpHost("localhost", 9200)  // Elasticsearch 주소
+                new HttpHost("elasticsearch", 9200)  // Elasticsearch 주소
         ).build();
     }
 
