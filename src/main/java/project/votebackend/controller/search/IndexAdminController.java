@@ -21,7 +21,7 @@ public class IndexAdminController {
             indexAdminService.createVotesIndex();
             return ResponseEntity.ok("votes 인덱스 생성 성공!");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("인덱스 생성 실패: " + e.getMessage());
+            return ResponseEntity.status(500).body("vote 인덱스 생성 실패: " + e.getMessage());
         }
     }
 
