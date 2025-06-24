@@ -1,9 +1,10 @@
-FROM gradle:8.7-jdk17 AS build
-WORKDIR /app
-COPY . .
-RUN gradle build
-
+# vote-backend/Dockerfile
 FROM openjdk:17-slim
+LABEL authors="kohuijae"
+
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+
+# JAR 복사
+COPY build/libs/vote-backend-0.0.1-SNAPSHOT.jar app.jar
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
