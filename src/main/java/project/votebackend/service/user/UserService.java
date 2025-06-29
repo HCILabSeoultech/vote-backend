@@ -64,14 +64,20 @@ public class UserService {
         long avg = calculateAverageParticipantCount(userId);
         Grade dynamicGrade = Grade.fromAverage(avg);
 
+        Long followerCount = followRepository.countByFollowing(user);
+        Long followingCount = followRepository.countByFollower(user);
+
         // 3. DTO 조립 및 반환
         return UserPageDto.builder()
                 .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .introduction(user.getIntroduction())
+                .address(user.getAddress())
                 .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
+                .followerCount(followerCount)
+                .followingCount(followingCount)
                 .point(user.getPoint())
                 .postCount(postCount)
                 .participatedCount(participatedCount)
