@@ -63,6 +63,15 @@ public class VoteSchedulingService {
         assignRanks(statList, Comparator.comparingInt(VoteStat6h::getTodayVoteCount).reversed(), "today");
         assignRanks(statList, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "comment");
 
+        // 진행 중 투표만 필터링
+        List<VoteStat6h> ongoingStats = statList.stream()
+                .filter(stat -> stat.getVote().getFinishTime().isAfter(now))
+                .toList();
+
+        // 진행 중 전용 랭킹 계산
+        assignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
+        assignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
+
         // 직전 통계와 비교하여 순위 변화 계산
         LocalDateTime lastTime = voteStat6hRepository.findLatestStatTimeBefore(now).orElse(null);
         Map<Long, VoteStat6h> prevStatMap = lastTime != null
@@ -82,6 +91,9 @@ public class VoteSchedulingService {
             stat.setRankChangeTotal(prev != null ? prev.getRankTotal() - stat.getRankTotal() : 0);
             stat.setRankChangeToday(prev != null ? prev.getRankToday() - stat.getRankToday() : 0);
             stat.setRankChangeComment(prev != null ? prev.getRankComment() - stat.getRankComment() : 0);
+
+            stat.setOngoingVoteCountRankChange(prev != null ? prev.getOngoingVoteCountRank() - stat.getOngoingVoteCountRank() : 0);
+            stat.setOngoingCommentRankChange(prev != null ? prev.getOngoingCommentRank() - stat.getOngoingCommentRank() : 0);
 
             voteStat6hRepository.save(stat);
         }

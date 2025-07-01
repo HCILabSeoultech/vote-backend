@@ -13,6 +13,7 @@ import project.votebackend.type.VoteStatusType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,10 +35,17 @@ public class VoteRankingService {
         LocalDateTime latest = voteStat6hRepository.findLatestStatTime();
         PageRequest pageable = PageRequest.of(page, size);
 
-        return (status == VoteStatusType.ONGOING
-                ? voteStat6hRepository.findByStatTimeAndVote_FinishTimeAfterOrderByTotalVoteCountDesc(latest, now, pageable)
-                : voteStat6hRepository.findByStatTimeAndVote_FinishTimeLessThanEqualOrderByTotalVoteCountDesc(latest, now, pageable))
-                .stream().map(this::toDto).toList();
+        if (status == VoteStatusType.ONGOING) {
+            // 진행 중인 투표만
+            return voteStat6hRepository
+                    .findByStatTimeAndVote_FinishTimeAfterOrderByTotalVoteCountDesc(latest, now, pageable)
+                    .stream().map(this::toDto).toList();
+        } else {
+            // 종료된 투표 포함 전체 (종료만 or 전체)
+            return voteStat6hRepository
+                    .findByStatTimeOrderByTotalVoteCountDesc(latest, pageable)
+                    .stream().map(this::toDto).toList();
+        }
     }
 
     // 오늘 득표순 정렬 (진행 중 투표만)
@@ -56,10 +64,17 @@ public class VoteRankingService {
         LocalDateTime latest = voteStat6hRepository.findLatestStatTime();
         PageRequest pageable = PageRequest.of(page, size);
 
-        return (status == VoteStatusType.ONGOING
-                ? voteStat6hRepository.findByStatTimeAndVote_FinishTimeAfterOrderByCommentCountDesc(latest, now, pageable)
-                : voteStat6hRepository.findByStatTimeAndVote_FinishTimeLessThanEqualOrderByCommentCountDesc(latest, now, pageable))
-                .stream().map(this::toDto).toList();
+        if (status == VoteStatusType.ONGOING) {
+            // 진행 중인 투표만
+            return voteStat6hRepository
+                    .findByStatTimeAndVote_FinishTimeAfterOrderByCommentCountDesc(latest, now, pageable)
+                    .stream().map(this::toDto).toList();
+        } else {
+            // 종료된 투표 포함 전체 (종료만 or 전체)
+            return voteStat6hRepository
+                    .findByStatTimeOrderByCommentCountDesc(latest, pageable)
+                    .stream().map(this::toDto).toList();
+        }
     }
 
     // 관심 급등순 정렬 (최근 1시간 투표 수 기준, 진행 중만)
@@ -107,6 +122,10 @@ public class VoteRankingService {
                 .rankChangeTotal(stat.getRankChangeTotal())
                 .rankChangeToday(stat.getRankChangeToday())
                 .rankChangeComment(stat.getRankChangeComment())
+                .ongoingCommentRank(stat.getOngoingCommentRank())
+                .ongoingCommentRankChange(stat.getOngoingCommentRankChange())
+                .ongoingVoteCountRank(stat.getOngoingVoteCountRank())
+                .ongoingVoteCountRankChange(stat.getOngoingVoteCountRankChange())
                 .finishTime(vote.getFinishTime())
                 .build();
     }

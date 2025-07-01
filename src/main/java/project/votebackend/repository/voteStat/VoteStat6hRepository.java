@@ -30,11 +30,11 @@ public interface VoteStat6hRepository extends JpaRepository<VoteStat6h, Long> {
     // 진행중인 투표 댓글수 기준 정렬
     Page<VoteStat6h> findByStatTimeAndVote_FinishTimeAfterOrderByCommentCountDesc(LocalDateTime statTime, LocalDateTime now, Pageable pageable);
 
-    // 진행중인 투표 전체 득표수 기준 정렬
-    Page<VoteStat6h> findByStatTimeAndVote_FinishTimeLessThanEqualOrderByTotalVoteCountDesc(LocalDateTime statTime, LocalDateTime now, Pageable pageable);
+    // 전체 득표수 기준 정렬
+    Page<VoteStat6h> findByStatTimeOrderByTotalVoteCountDesc(LocalDateTime statTime, Pageable pageable);
 
-    // 진행중인 투표 댓글수 기준 정렬
-    Page<VoteStat6h> findByStatTimeAndVote_FinishTimeLessThanEqualOrderByCommentCountDesc(LocalDateTime statTime, LocalDateTime now, Pageable pageable);
+    // 댓글수 기준 정렬
+    Page<VoteStat6h> findByStatTimeOrderByCommentCountDesc(LocalDateTime statTime, Pageable pageable);
 
     // 이전 1시간 단위 시간 조회
     @Query("SELECT MAX(v.statTime) FROM VoteStat6h v WHERE v.statTime < :now")
