@@ -26,4 +26,10 @@ public class VoteSummaryDto {
     private int rankChangeTotal;         // 누적 득표 순위 변화
     private int rankChangeToday;         // 오늘 득표 순위 변화
     private int rankChangeComment;
+
+    private int ongoingCommentRank;         // 진행중인 투표 댓글 수 랭킹
+    private int ongoingVoteCountRank;       // 진행중인 투표 투표 수 랭킹
+
+    private int ongoingCommentRankChange;   // 진행중인 투표 댓글 수 랭킹 변화
+    private int ongoingVoteCountRankChange; // 진행중인 투표 투표 수 랭킹 변화
 }
