@@ -157,6 +157,7 @@ public class VoteService {
         newVote.setUser(original.getUser());
         newVote.setVoteType(original.getVoteType());
         newVote.setFinishTime(newFinishTime);
+        newVote.setStatus(VoteStatus.PUBLISHED);
         voteRepository.save(newVote);
 
         // 옵션 복사
