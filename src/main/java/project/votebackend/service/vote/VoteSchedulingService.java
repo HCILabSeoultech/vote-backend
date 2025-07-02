@@ -116,9 +116,9 @@ public class VoteSchedulingService {
         for (int i = 0; i < stats.size(); i++) {
             VoteStat6h stat = stats.get(i);
             int score = switch (type) {
-                case "total" -> stat.getTotalVoteCount();
+                case "total", "ongoingVote" -> stat.getTotalVoteCount();
                 case "today" -> stat.getTodayVoteCount();
-                case "comment" -> stat.getCommentCount();
+                case "comment", "ongoingComment" -> stat.getCommentCount();
                 default -> throw new IllegalArgumentException("Invalid type");
             };
 
@@ -127,9 +127,9 @@ public class VoteSchedulingService {
             }
 
             switch (type) {
-                case "total" -> stat.setRankTotal(rank);
+                case "total", "ongoingVote" -> stat.setRankTotal(rank);
                 case "today" -> stat.setRankToday(rank);
-                case "comment" -> stat.setRankComment(rank);
+                case "comment", "ongoingComment" -> stat.setRankComment(rank);
             }
 
             prevScore = score;
