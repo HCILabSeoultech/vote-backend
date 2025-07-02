@@ -130,8 +130,15 @@ public class VoteSchedulingService {
 
             switch (type) {
                 case "total" -> stat.setRankTotal(rank);
+<<<<<<< HEAD
                 case "today" -> stat.setRankToday(rank);
                 case "comment" -> stat.setRankComment(rank);
+=======
+                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
+                case "today" -> stat.setRankToday(rank);
+                case "comment" -> stat.setRankComment(rank);
+                case "ongoingComment" -> stat.setOngoingCommentRank(rank);
+>>>>>>> 5bee495 (fix: [054-vote-ranking] 투표 랭킹 필터링 구조 변경 ver2)
             }
 
             prevScore = score;
@@ -139,6 +146,7 @@ public class VoteSchedulingService {
     }
 
     /**
+<<<<<<< HEAD
      * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
      */
     private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
@@ -169,6 +177,8 @@ public class VoteSchedulingService {
     }
 
     /**
+=======
+>>>>>>> 5bee495 (fix: [054-vote-ranking] 투표 랭킹 필터링 구조 변경 ver2)
      * [6시간 단위 통계 생성]
      * - 최근 6시간 동안의 투표 수를 계산하여 저장
      * - 공동 순위 고려하여 등수 계산
