@@ -127,9 +127,11 @@ public class VoteSchedulingService {
             }
 
             switch (type) {
-                case "total", "ongoingVote" -> stat.setRankTotal(rank);
+                case "total" -> stat.setRankTotal(rank);
+                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "today" -> stat.setRankToday(rank);
-                case "comment", "ongoingComment" -> stat.setRankComment(rank);
+                case "comment" -> stat.setRankComment(rank);
+                case "ongoingComment" -> stat.setOngoingCommentRank(rank);
             }
 
             prevScore = score;
@@ -137,25 +139,28 @@ public class VoteSchedulingService {
     }
 
     /**
-     * [1시간 단위 통계 생성]
-     * - 최근 1시간 동안의 투표 수를 계산하여 저장
+     * [6시간 단위 통계 생성]
+     * - 최근 6시간 동안의 투표 수를 계산하여 저장
      * - 공동 순위 고려하여 등수 계산
      * - 이전 시간 대비 순위 변화도 기록
      */
     @Transactional
     public void generateHourlyStats() {
-        LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시
-        LocalDateTime oneHourAgo = now.minusHours(1); // 1시간 전
+        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시
+        LocalDateTime now = time.minusHours(9);
+        LocalDateTime sixHourAgo = now.minusHours(6);
+
+        voteStatHourlyRepository.deleteByStatHour(now);
 
         // 투표 + 선택지 로딩
         List<Vote> votes = voteRepository.findAllWithSelections();
 
-        // 최근 1시간 투표 수 계산
+        // 최근 6시간 투표 수 계산
         List<VoteStatHourly> statList = votes.stream().map(vote -> {
             int voteCount = (int) vote.getSelections().stream()
                     .filter(s -> {
                         LocalDateTime created = s.getCreatedAt();
-                        return created.isAfter(oneHourAgo) && !created.isAfter(now);
+                        return created.isAfter(sixHourAgo) && !created.isAfter(now);
                     }).count();
 
             return VoteStatHourly.builder()
@@ -201,10 +206,12 @@ public class VoteSchedulingService {
             stat.setRankChange(prev != null ? prev.getRank() - stat.getRank() : 0);
             voteStatHourlyRepository.save(stat);
         }
+        System.out.println("저장완료");
 
         // 이전 시간 통계 삭제
         if (lastHour != null) {
             voteStatHourlyRepository.deleteByStatHour(lastHour);
+            System.out.println("삭제완료");
         }
     }
 }
