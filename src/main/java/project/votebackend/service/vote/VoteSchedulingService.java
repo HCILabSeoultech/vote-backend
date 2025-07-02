@@ -66,7 +66,7 @@ public class VoteSchedulingService {
         // 진행 중 투표만 필터링
         List<VoteStat6h> ongoingStats = statList.stream()
                 .filter(stat -> stat.getVote().getFinishTime().isAfter(now))
-                .toList();
+                .collect(Collectors.toList());
 
         // 진행 중 전용 랭킹 계산
         assignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
