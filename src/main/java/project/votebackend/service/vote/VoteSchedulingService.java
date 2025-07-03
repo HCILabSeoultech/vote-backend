@@ -130,9 +130,37 @@ public class VoteSchedulingService {
 
             switch (type) {
                 case "total" -> stat.setRankTotal(rank);
-                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "today" -> stat.setRankToday(rank);
                 case "comment" -> stat.setRankComment(rank);
+            }
+
+            prevScore = score;
+        }
+    }
+
+    /**
+     * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
+     */
+    private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+        stats.sort(comparator); // 정렬
+
+        int rank = 1;
+        int prevScore = -1;
+
+        for (int i = 0; i < stats.size(); i++) {
+            VoteStat6h stat = stats.get(i);
+            int score = switch (type) {
+                case "ongoingVote" -> stat.getTotalVoteCount();
+                case "ongoingComment" -> stat.getCommentCount();
+                default -> throw new IllegalArgumentException("Invalid type");
+            };
+
+            if (score != prevScore) {
+                rank = i + 1;
+            }
+
+            switch (type) {
+                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "ongoingComment" -> stat.setOngoingCommentRank(rank);
             }
 
