@@ -34,7 +34,8 @@ public class VoteSchedulingService {
      */
     @Transactional
     public void generate6hStats() {
-        LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시 기준
+        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시 기준
+        LocalDateTime now = time.minusHours(9);
 
         // 모든 투표 + 선택지 로딩
         List<Vote> votes = voteRepository.findAllWithSelections();
@@ -69,8 +70,8 @@ public class VoteSchedulingService {
                 .collect(Collectors.toList());
 
         // 진행 중 전용 랭킹 계산
-        assignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
-        assignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
+        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
+        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
 
         // 직전 통계와 비교하여 순위 변화 계산
         LocalDateTime lastTime = voteStat6hRepository.findLatestStatTimeBefore(now).orElse(null);
@@ -84,6 +85,7 @@ public class VoteSchedulingService {
         )
                 : Collections.emptyMap();
 
+        voteStat6hRepository.deleteByStatTime(now);
         for (VoteStat6h stat : statList) {
             VoteStat6h prev = prevStatMap.get(stat.getVote().getVoteId());
 
@@ -116,9 +118,9 @@ public class VoteSchedulingService {
         for (int i = 0; i < stats.size(); i++) {
             VoteStat6h stat = stats.get(i);
             int score = switch (type) {
-                case "total", "ongoingVote" -> stat.getTotalVoteCount();
+                case "total" -> stat.getTotalVoteCount();
                 case "today" -> stat.getTodayVoteCount();
-                case "comment", "ongoingComment" -> stat.getCommentCount();
+                case "comment" -> stat.getCommentCount();
                 default -> throw new IllegalArgumentException("Invalid type");
             };
 
@@ -128,9 +130,37 @@ public class VoteSchedulingService {
 
             switch (type) {
                 case "total" -> stat.setRankTotal(rank);
-                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "today" -> stat.setRankToday(rank);
                 case "comment" -> stat.setRankComment(rank);
+            }
+
+            prevScore = score;
+        }
+    }
+
+    /**
+     * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
+     */
+    private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+        stats.sort(comparator); // 정렬
+
+        int rank = 1;
+        int prevScore = -1;
+
+        for (int i = 0; i < stats.size(); i++) {
+            VoteStat6h stat = stats.get(i);
+            int score = switch (type) {
+                case "ongoingVote" -> stat.getTotalVoteCount();
+                case "ongoingComment" -> stat.getCommentCount();
+                default -> throw new IllegalArgumentException("Invalid type");
+            };
+
+            if (score != prevScore) {
+                rank = i + 1;
+            }
+
+            switch (type) {
+                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "ongoingComment" -> stat.setOngoingCommentRank(rank);
             }
 
