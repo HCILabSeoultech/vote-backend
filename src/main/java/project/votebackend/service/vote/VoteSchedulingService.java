@@ -73,6 +73,15 @@ public class VoteSchedulingService {
         ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
         ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
 
+        // 종료된 투표만 필터링
+        List<VoteStat6h> endedStats = statList.stream()
+                .filter(stat -> stat.getVote().getFinishTime().isBefore(now))
+                .collect(Collectors.toList());
+
+        // 종료 전용 랭킹 계산
+        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "endedVote");
+        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "endedComment");
+
         // 직전 통계와 비교하여 순위 변화 계산
         LocalDateTime lastTime = voteStat6hRepository.findLatestStatTimeBefore(now).orElse(null);
         Map<Long, VoteStat6h> prevStatMap = lastTime != null
@@ -96,6 +105,9 @@ public class VoteSchedulingService {
 
             stat.setOngoingVoteCountRankChange(prev != null ? prev.getOngoingVoteCountRank() - stat.getOngoingVoteCountRank() : 0);
             stat.setOngoingCommentRankChange(prev != null ? prev.getOngoingCommentRank() - stat.getOngoingCommentRank() : 0);
+
+            stat.setEndedVoteCountRankChange(prev != null ? prev.getEndedVoteCountRank() - stat.getEndedVoteCountRank() : 0);
+            stat.setEndedCommentRankChange(prev != null ? prev.getEndedCommentRank() - stat.getEndedCommentRank() : 0);
 
             voteStat6hRepository.save(stat);
         }
@@ -169,7 +181,37 @@ public class VoteSchedulingService {
     }
 
     /**
-     * [6시간 단위 통계 생성]
+     * 랭킹 할당 함수 (공동 순위 적용, 종료된 투표)
+     */
+    private void endedAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+        stats.sort(comparator); // 정렬
+
+        int rank = 1;
+        int prevScore = -1;
+
+        for (int i = 0; i < stats.size(); i++) {
+            VoteStat6h stat = stats.get(i);
+            int score = switch (type) {
+                case "endedVote" -> stat.getTotalVoteCount();
+                case "endedComment" -> stat.getCommentCount();
+                default -> throw new IllegalArgumentException("Invalid type");
+            };
+
+            if (score != prevScore) {
+                rank = i + 1;
+            }
+
+            switch (type) {
+                case "endedVote" -> stat.setEndedVoteCountRank(rank);
+                case "endedComment" -> stat.setEndedCommentRank(rank);
+            }
+
+            prevScore = score;
+        }
+    }
+
+    /**
+     * [1시간 단위 통계 생성]
      * - 최근 6시간 동안의 투표 수를 계산하여 저장
      * - 공동 순위 고려하여 등수 계산
      * - 이전 시간 대비 순위 변화도 기록
