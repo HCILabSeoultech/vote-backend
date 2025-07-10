@@ -169,39 +169,6 @@ public class VoteSchedulingService {
     }
 
     /**
-<<<<<<< HEAD
-     * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
-     */
-    private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
-        stats.sort(comparator); // 정렬
-
-        int rank = 1;
-        int prevScore = -1;
-
-        for (int i = 0; i < stats.size(); i++) {
-            VoteStat6h stat = stats.get(i);
-            int score = switch (type) {
-                case "ongoingVote" -> stat.getTotalVoteCount();
-                case "ongoingComment" -> stat.getCommentCount();
-                default -> throw new IllegalArgumentException("Invalid type");
-            };
-
-            if (score != prevScore) {
-                rank = i + 1;
-            }
-
-            switch (type) {
-                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
-                case "ongoingComment" -> stat.setOngoingCommentRank(rank);
-            }
-
-            prevScore = score;
-        }
-    }
-
-    /**
-=======
->>>>>>> 5bee495 (fix: [054-vote-ranking] 투표 랭킹 필터링 구조 변경 ver2)
      * [6시간 단위 통계 생성]
      * - 최근 6시간 동안의 투표 수를 계산하여 저장
      * - 공동 순위 고려하여 등수 계산
