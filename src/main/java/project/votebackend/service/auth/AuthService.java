@@ -110,7 +110,7 @@ public class AuthService {
     //닉네임 중복 확인
     public boolean isNameAvailable(String name) {
         if (userRepository.findByName(name).isPresent()) {
-            throw new AuthException(ErrorCode.ALREADY_EXIST_NAME);
+            throw new AuthException(ErrorCode.ALREADY_EXIST_NICKNAME);
         }
         return true;
     }

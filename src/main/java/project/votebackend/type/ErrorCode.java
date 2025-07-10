@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     //Auth
     ALREADY_EXIST_NAME(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다."),
-    ALREADY_EXIST_NICkNAME(HttpStatus.CONFLICT, "이미 존재하는 이름입니다."),
+    ALREADY_EXIST_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 이름입니다."),
     ALREADY_EXIST_PHONE(HttpStatus.CONFLICT, "이미 존재하는 전화번호입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"내부 서버 오류 발생"),
     USERNAME_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 아이디입니다."),
