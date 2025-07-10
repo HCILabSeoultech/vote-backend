@@ -57,6 +57,13 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("available", available));
     }
 
+    //닉네임 중복 확인
+    @GetMapping("/check-name")
+    public ResponseEntity<Map<String, Boolean>> checkNameDuplicate(@RequestParam String name) {
+        boolean available = authService.isNameAvailable(name);
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+
     //로그인
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
