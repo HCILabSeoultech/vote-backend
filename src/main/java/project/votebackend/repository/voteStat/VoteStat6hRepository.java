@@ -1,6 +1,7 @@
 package project.votebackend.repository.voteStat;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.vote.VoteStat6h;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +31,12 @@ public interface VoteStat6hRepository extends JpaRepository<VoteStat6h, Long> {
 
     // 진행중인 투표 댓글수 기준 정렬
     Page<VoteStat6h> findByStatTimeAndVote_FinishTimeAfterOrderByCommentCountDesc(LocalDateTime statTime, LocalDateTime now, Pageable pageable);
+
+    // 종료된 투표 전체 투표수 기준 정렬
+    Page<VoteStat6h> findByStatTimeAndVote_FinishTimeBeforeOrderByTotalVoteCountDesc(LocalDateTime latest, LocalDateTime now, Pageable pageable);
+
+    // 종료된 투표 댓글수 기준 정렬
+    Page<VoteStat6h> findByStatTimeAndVote_FinishTimeBeforeOrderByCommentCountDesc(LocalDateTime latest, LocalDateTime now, Pageable pageable);
 
     // 전체 득표수 기준 정렬
     Page<VoteStat6h> findByStatTimeOrderByTotalVoteCountDesc(LocalDateTime statTime, Pageable pageable);

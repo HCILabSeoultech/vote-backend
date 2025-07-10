@@ -40,8 +40,13 @@ public class VoteRankingService {
             return voteStat6hRepository
                     .findByStatTimeAndVote_FinishTimeAfterOrderByTotalVoteCountDesc(latest, now, pageable)
                     .stream().map(this::toDto).toList();
+        } else if (status == VoteStatusType.ENDED) {
+            // 종료 된 투표만
+            return voteStat6hRepository
+                    .findByStatTimeAndVote_FinishTimeBeforeOrderByTotalVoteCountDesc(latest, now, pageable)
+                    .stream().map(this::toDto).toList();
         } else {
-            // 종료된 투표 포함 전체 (종료만 or 전체)
+            // 전체 (전체)
             return voteStat6hRepository
                     .findByStatTimeOrderByTotalVoteCountDesc(latest, pageable)
                     .stream().map(this::toDto).toList();
@@ -69,8 +74,13 @@ public class VoteRankingService {
             return voteStat6hRepository
                     .findByStatTimeAndVote_FinishTimeAfterOrderByCommentCountDesc(latest, now, pageable)
                     .stream().map(this::toDto).toList();
+        } else if (status == VoteStatusType.ENDED) {
+            // 종료 된 투표만
+            return voteStat6hRepository
+                    .findByStatTimeAndVote_FinishTimeBeforeOrderByCommentCountDesc(latest, now, pageable)
+                    .stream().map(this::toDto).toList();
         } else {
-            // 종료된 투표 포함 전체 (종료만 or 전체)
+            // 전체
             return voteStat6hRepository
                     .findByStatTimeOrderByCommentCountDesc(latest, pageable)
                     .stream().map(this::toDto).toList();
@@ -126,6 +136,10 @@ public class VoteRankingService {
                 .ongoingCommentRankChange(stat.getOngoingCommentRankChange())
                 .ongoingVoteCountRank(stat.getOngoingVoteCountRank())
                 .ongoingVoteCountRankChange(stat.getOngoingVoteCountRankChange())
+                .endedCommentRank(stat.getEndedCommentRank())
+                .endedCommentRankChange(stat.getEndedCommentRankChange())
+                .endedVoteCountRank(stat.getEndedVoteCountRank())
+                .endedVoteCountRankChange(stat.getEndedVoteCountRankChange())
                 .finishTime(vote.getFinishTime())
                 .build();
     }
