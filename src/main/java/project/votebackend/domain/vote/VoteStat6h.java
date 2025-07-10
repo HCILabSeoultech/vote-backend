@@ -42,4 +42,10 @@ public class VoteStat6h extends BaseEntity {
 
     private int ongoingCommentRankChange;   // 진행중인 투표 댓글 수 랭킹 변화
     private int ongoingVoteCountRankChange; // 진행중인 투표 투표 수 랭킹 변화
+
+    private int endedCommentRank;         // 종료된 투표 댓글 수 랭킹
+    private int endedVoteCountRank;       // 종료된 투표 투표 수 랭킹
+
+    private int endedCommentRankChange;   // 종료된 투표 댓글 수 랭킹 변화
+    private int endedVoteCountRankChange; // 종료된 투표 투표 수 랭킹 변화
 }
