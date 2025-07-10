@@ -107,6 +107,14 @@ public class AuthService {
         return true;
     }
 
+    //닉네임 중복 확인
+    public boolean isNameAvailable(String name) {
+        if (userRepository.findByName(name).isPresent()) {
+            throw new AuthException(ErrorCode.ALREADY_EXIST_NAME);
+        }
+        return true;
+    }
+
     //로그인
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
