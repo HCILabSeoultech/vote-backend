@@ -12,27 +12,27 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @RequestMapping("/migrate")
 public class MigrationController {
-    private final MigrationService migrationService;
-
-    //투표 마이그레이션
-    @PostMapping("/votes")
-    public String migrateVotes() {
-        try {
-            migrationService.migrateVotesToElasticsearch();
-            return "Migration success";
-        } catch (IOException e) {
-            return "Migration failed";
-        }
-    }
-
-    //유저 마이그레이션
-    @PostMapping("/users")
-    public String migrateUsers() {
-        try {
-            migrationService.migrateUsersToElasticsearch();
-            return "Migration success";
-        } catch (IOException e) {
-            return "Migration failed";
-        }
-    }
+//    private final MigrationService migrationService;
+//
+//    //투표 마이그레이션
+//    @PostMapping("/votes")
+//    public String migrateVotes() {
+//        try {
+//            migrationService.migrateVotesToElasticsearch();
+//            return "Migration success";
+//        } catch (IOException e) {
+//            return "Migration failed";
+//        }
+//    }
+//
+//    //유저 마이그레이션
+//    @PostMapping("/users")
+//    public String migrateUsers() {
+//        try {
+//            migrationService.migrateUsersToElasticsearch();
+//            return "Migration success";
+//        } catch (IOException e) {
+//            return "Migration failed";
+//        }
+//    }
 }
