@@ -9,15 +9,15 @@ import project.votebackend.domain.user.User;
 @AllArgsConstructor
 @Builder
 public class UserDocument {
-//    private Long id;
-//    private String username;
-//    private String profileImage;
-//
-//    public static UserDocument fromEntity(User user) {
-//        return new UserDocument(
-//                user.getUserId(),
-//                user.getName(),
-//                user.getProfileImage()
-//        );
-//    }
+    private Long id;
+    private String username;
+    private String profileImage;
+
+    public static UserDocument fromEntity(User user) {
+        return new UserDocument(
+                user.getUserId(),
+                user.getName(),
+                user.getProfileImage()
+        );
+    }
 }
