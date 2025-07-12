@@ -4,10 +4,14 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.elasticSearch.VoteDocument;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import project.votebackend.repository.vote.VoteRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,40 +23,53 @@ public class SearchService {
 
     private final ElasticsearchClient elasticsearchClient;
 
-    // [투표 검색] 키워드를 기반으로 vote 문서(votes 인덱스)를 검색
-    public List<VoteDocument> searchVotes(String keyword) throws IOException {
-        SearchResponse<VoteDocument> response = elasticsearchClient.search(s -> s
-                        .index("votes")         // 검색 대상 인덱스
-                        .size(20)               // 최대 검색 결과 개수
-                        .query(q -> q.bool(b -> b // Bool 쿼리로 다양한 조건 결합
-                                .should(m -> m.match(mm -> mm
-                                        .field("title.ngram")     // ngram 기반: 일부 단어 매칭 가능 (자동완성)
-                                        .query(keyword)
-                                        .boost(4.0f)))            // 중요도 가장 높음
-                                .should(m -> m.matchPhrase(mp -> mp
-                                        .field("title.standard")  // 정확한 문장 전체 매칭
-                                        .query(keyword)))
-                                .should(m -> m.match(mm -> mm
-                                        .field("title")           // 일반 title 필드에 대해 오타 허용
-                                        .query(keyword)
-                                        .fuzziness("AUTO")        // 자동 오타 허용 (Levenshtein Distance)
-                                        .boost(2.0f)))            // 가중치 중간
-                                .should(m -> m.match(mm -> mm
-                                        .field("username")        // 작성자 username 검색 (오타 허용)
-                                        .query(keyword)
-                                        .fuzziness("AUTO")))
-                                .should(m -> m.term(t -> t
-                                        .field("category.keyword") // 정확한 카테고리 명칭
-                                        .value(keyword)))
-                        )),
-                VoteDocument.class
-        );
+    private final VoteRepository voteRepository;
 
-        // 검색 결과에서 source (VoteDocument)만 추출하여 리스트로 반환
-        return response.hits().hits().stream()
-                .map(Hit::source)
-                .collect(Collectors.toList());
+    public Page<VoteSearchResponse> searchVotes(String keyword, Pageable pageable) {
+        Page<Object[]> page = voteRepository.searchVotesWithStats(keyword, pageable);
+        return page.map(row -> new VoteSearchResponse(
+                ((Number) row[0]).longValue(),  // vote_id
+                (String) row[1],                // title
+                ((Number) row[2]).intValue(),   // participant_count
+                ((Number) row[3]).intValue(),   // like_count
+                ((Number) row[4]).intValue()    // comment_count
+        ));
     }
+
+//    // [투표 검색] 키워드를 기반으로 vote 문서(votes 인덱스)를 검색
+//    public List<VoteDocument> searchVotes(String keyword) throws IOException {
+//        SearchResponse<VoteDocument> response = elasticsearchClient.search(s -> s
+//                        .index("votes")         // 검색 대상 인덱스
+//                        .size(20)               // 최대 검색 결과 개수
+//                        .query(q -> q.bool(b -> b // Bool 쿼리로 다양한 조건 결합
+//                                .should(m -> m.match(mm -> mm
+//                                        .field("title.ngram")     // ngram 기반: 일부 단어 매칭 가능 (자동완성)
+//                                        .query(keyword)
+//                                        .boost(4.0f)))            // 중요도 가장 높음
+//                                .should(m -> m.matchPhrase(mp -> mp
+//                                        .field("title.standard")  // 정확한 문장 전체 매칭
+//                                        .query(keyword)))
+//                                .should(m -> m.match(mm -> mm
+//                                        .field("title")           // 일반 title 필드에 대해 오타 허용
+//                                        .query(keyword)
+//                                        .fuzziness("AUTO")        // 자동 오타 허용 (Levenshtein Distance)
+//                                        .boost(2.0f)))            // 가중치 중간
+//                                .should(m -> m.match(mm -> mm
+//                                        .field("username")        // 작성자 username 검색 (오타 허용)
+//                                        .query(keyword)
+//                                        .fuzziness("AUTO")))
+//                                .should(m -> m.term(t -> t
+//                                        .field("category.keyword") // 정확한 카테고리 명칭
+//                                        .value(keyword)))
+//                        )),
+//                VoteDocument.class
+//        );
+//
+//        // 검색 결과에서 source (VoteDocument)만 추출하여 리스트로 반환
+//        return response.hits().hits().stream()
+//                .map(Hit::source)
+//                .collect(Collectors.toList());
+//    }
 
     // [유저 검색] 키워드를 기반으로 user 문서(users 인덱스)를 검색
     public List<UserDocument> searchUsers(String keyword) throws IOException {
@@ -85,4 +102,6 @@ public class SearchService {
                 .map(Hit::source)
                 .collect(Collectors.toList());
     }
+
+
 }
