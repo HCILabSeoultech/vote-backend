@@ -162,4 +162,40 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     // 최근 10개의 투표 조회
     List<Vote> findTop10ByUser_UserIdOrderByCreatedAtDesc(Long userId);
+
+    // 투표 검색
+    @Query(value = """
+    SELECT 
+        v.vote_id,
+        v.title,
+        COALESCE(s.selection_count, 0) AS participant_count,
+        COALESCE(r.like_count, 0) AS like_count,
+        COALESCE(c.comment_count, 0) AS comment_count
+    FROM vote v
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS selection_count
+        FROM vote_selections
+        GROUP BY vote_id
+    ) s ON v.vote_id = s.vote_id
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS like_count
+        FROM reaction
+        WHERE reaction = 'LIKE'
+        GROUP BY vote_id
+    ) r ON v.vote_id = r.vote_id
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS comment_count
+        FROM comment
+        WHERE parent_id IS NULL
+        GROUP BY vote_id
+    ) c ON v.vote_id = c.vote_id
+    WHERE v.title ILIKE CONCAT('%', :keyword, '%')
+    """,
+            countQuery = """
+    SELECT COUNT(*)
+    FROM vote v
+    WHERE v.title ILIKE CONCAT('%', :keyword, '%')
+    """,
+            nativeQuery = true)
+    Page<Object[]> searchVotesWithStats(@Param("keyword") String keyword, Pageable pageable);
 }
