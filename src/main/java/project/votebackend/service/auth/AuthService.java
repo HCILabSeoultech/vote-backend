@@ -1,8 +1,12 @@
 package project.votebackend.service.auth;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,8 @@ import project.votebackend.type.Grade;
 import project.votebackend.util.JwtUtil;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -35,6 +41,7 @@ public class AuthService {
     private final UserInterestRepository userInterestRepository;
     private final JwtUtil jwtUtil;
     private final ElasticsearchClient elasticsearchClient;
+    private final RedisTemplate<String, String> redisTemplate;
 
 
     // 회원가입 (아이디 및 전화번호는 중복 존재 불가)
@@ -116,7 +123,7 @@ public class AuthService {
     }
 
     //로그인
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
@@ -124,7 +131,26 @@ public class AuthService {
             throw new AuthException(ErrorCode.PASSWORD_NOT_MATCHED);
         }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getUserId());
-        return new LoginResponse("success", token);
+        // 1. Access & Refresh Token 생성
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getUserId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+
+        log.info("✅ Access Token: {}", accessToken);
+        log.info("✅ Refresh Token: {}", refreshToken);
+
+        // 2. Redis에 저장 (key: RT:{userId}, value: refreshToken, TTL: 7일)
+        redisTemplate.opsForValue().set("RT:" + user.getUserId(), refreshToken, 7, TimeUnit.DAYS);
+        log.info("✅ Redis 저장 완료 → key: RT:{}, value: {}", user.getUserId(), refreshToken);
+
+        // 3. 클라이언트에 RefreshToken을 HttpOnly 쿠키로 전송
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true) // HTTPS가 아닌 경우 false
+                .path("/")
+                .maxAge(Duration.ofDays(7))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return new LoginResponse("success", accessToken);
     }
 }

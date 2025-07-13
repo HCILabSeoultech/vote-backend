@@ -3,6 +3,8 @@ package project.votebackend.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -28,14 +30,28 @@ public class JwtUtil {
                 .compact();                        // 최종적으로 JWT 문자열 반환
     }
 
+    // RefreshToken (7일)
+    public String generateRefreshToken(String username) {
+        long REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .compact();
+    }
+
     public String extractUsername(String token) {
         // JWT에서 subject(=username) 추출
         return getClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token) {
-        // JWT의 만료일이 현재 시간 이후인지 확인하여 유효성 판단
-        return !getClaims(token).getExpiration().before(new Date());
+    public String getUsernameFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     private Claims getClaims(String token) {
@@ -44,6 +60,25 @@ public class JwtUtil {
                 .setSigningKey(SECRET_KEY)         // 서명 검증을 위한 비밀 키 설정
                 .parseClaimsJws(token)             // 토큰을 파싱하고 서명 검증
                 .getBody();                        // 페이로드(Claims) 반환
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String extractRefreshTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if (cookie.getName().equals("refreshToken")) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 
 }
