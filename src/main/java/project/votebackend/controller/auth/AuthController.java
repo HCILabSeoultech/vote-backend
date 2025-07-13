@@ -1,17 +1,27 @@
 package project.votebackend.controller.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.login.LoginRequest;
+import project.votebackend.dto.login.LoginResponse;
 import project.votebackend.dto.signup.UserSignupDto;
 import project.votebackend.dto.user.UserUpdateDto;
+import project.votebackend.exception.AuthException;
+import project.votebackend.repository.user.UserRepository;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.auth.AuthService;
+import project.votebackend.type.ErrorCode;
+import project.votebackend.util.JwtUtil;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +32,10 @@ import java.util.stream.Collectors;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, String> redisTemplate;
+
 
     // 회원가입
     @PostMapping("/signup")
@@ -66,8 +80,47 @@ public class AuthController {
 
     //로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
-        return ResponseEntity.ok(authService.login(loginRequest));
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+        return ResponseEntity.ok(authService.login(loginRequest, response));
+    }
+
+    //리프레쉬토큰
+    @PostMapping("/token/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        String refreshToken = jwtUtil.extractRefreshTokenFromCookie(request);
+
+        if (!jwtUtil.validateToken(refreshToken)) {
+            return ResponseEntity.status(401).body("Invalid or expired refresh token");
+        }
+
+        String username = jwtUtil.getUsernameFromToken(refreshToken);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        // Redis에서 Refresh Token 검증
+        String stored = redisTemplate.opsForValue().get("RT:" + user.getUserId());
+        if (stored == null || !stored.equals(refreshToken)) {
+            return ResponseEntity.status(401).body("Refresh token mismatch");
+        }
+
+        String newAccessToken = jwtUtil.generateToken(username, user.getUserId());
+        return ResponseEntity.ok(new LoginResponse("success", newAccessToken));
+    }
+
+    //로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal CustumUserDetails user, HttpServletResponse response) {
+        // Redis 삭제
+        redisTemplate.delete("RT:" + user.getId());
+
+        // 쿠키도 삭제
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .build();
+        response.addHeader("Set-Cookie", expiredCookie.toString());
+
+        return ResponseEntity.ok().build();
     }
 }
 
