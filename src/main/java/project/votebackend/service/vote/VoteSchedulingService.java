@@ -130,15 +130,10 @@ public class VoteSchedulingService {
 
             switch (type) {
                 case "total" -> stat.setRankTotal(rank);
-<<<<<<< HEAD
-                case "today" -> stat.setRankToday(rank);
-                case "comment" -> stat.setRankComment(rank);
-=======
                 case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
                 case "today" -> stat.setRankToday(rank);
                 case "comment" -> stat.setRankComment(rank);
                 case "ongoingComment" -> stat.setOngoingCommentRank(rank);
->>>>>>> 5bee495 (fix: [054-vote-ranking] 투표 랭킹 필터링 구조 변경 ver2)
             }
 
             prevScore = score;
