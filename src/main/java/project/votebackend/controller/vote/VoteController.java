@@ -23,6 +23,17 @@ public class VoteController {
     private final VoteService voteService;
 
     // 투표 저장
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadVote(
+            @RequestBody CreateVoteRequest request,
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        Vote created = voteService.uploadVote(request, userDetails.getId());
+        return ResponseEntity.ok(new CreateVoteResponse("success", created.getVoteId()));
+    }
+
+
+    // 투표 저장
     @PostMapping("/create")
     public ResponseEntity<?> createVote(
             @RequestBody CreateVoteRequest request,

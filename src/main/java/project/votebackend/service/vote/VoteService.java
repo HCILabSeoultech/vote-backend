@@ -49,6 +49,59 @@ public class VoteService {
 
     //투표 생성
     @Transactional
+    public Vote uploadVote(CreateVoteRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        VoteType voteType;
+        try {
+            voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+        }
+
+        Vote vote = Vote.builder()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .finishTime(request.getFinishTime())
+                .status(VoteStatus.PUBLISHED)
+                .voteType(voteType)
+                .build();
+
+        vote.setUser(user);
+        vote.setCategory(category);
+
+
+        // 옵션 추가
+        Set<VoteOption> options = request.getOptions().stream().map(opt -> {
+            VoteOption o = new VoteOption();
+            o.setVote(vote);
+            o.setOption(opt.getContent());
+            o.setOptionImage(opt.getOptionImage());
+            return o;
+        }).collect(Collectors.toSet());
+
+        vote.setOptions(options);
+
+        // 이미지 추가
+        if (request.getImageUrls() != null) {
+            Set<VoteImage> images = request.getImageUrls().stream().map(url -> {
+                VoteImage img = new VoteImage();
+                img.setVote(vote);
+                img.setImageUrl(url);
+                return img;
+            }).collect(Collectors.toSet());
+            vote.setImages(images);
+        }
+
+        return voteRepository.save(vote);
+    }
+
+    //투표 임시저장
+    @Transactional
     public Vote createVote(CreateVoteRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
@@ -181,16 +234,16 @@ public class VoteService {
         }
 
         //Elasticsearch에 저장
-        try {
-            VoteDocument doc = VoteDocument.fromEntity(newVote);
-            elasticsearchClient.index(i -> i
-                    .index("votes")
-                    .id(String.valueOf(doc.getId()))
-                    .document(doc)
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 저장 실패", e);
-        }
+//        try {
+//            VoteDocument doc = VoteDocument.fromEntity(newVote);
+//            elasticsearchClient.index(i -> i
+//                    .index("votes")
+//                    .id(String.valueOf(doc.getId()))
+//                    .document(doc)
+//            );
+//        } catch (IOException e) {
+//            log.error("Elasticsearch 저장 실패", e);
+//        }
 
         return newVote.getVoteId();
     }
