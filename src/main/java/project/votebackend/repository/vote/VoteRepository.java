@@ -160,6 +160,46 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     """)
     List<Vote> findAllWithSelections();
 
+    //총투표수 기준 정렬
+    @Query("""
+        SELECT v
+        FROM Vote v
+        LEFT JOIN v.selections s
+        WHERE
+            (:status = 'ALL')
+            OR (:status = 'ONGOING' AND v.finishTime > CURRENT_TIMESTAMP)
+            OR (:status = 'ENDED' AND v.finishTime <= CURRENT_TIMESTAMP)
+        GROUP BY v
+        ORDER BY COUNT(s) DESC
+    """)
+    List<Vote> findVotesSortedByTotalVotes(@Param("status") String status, Pageable pageable);
+
+    // 댓글 수 기준 정렬
+    @Query("""
+        SELECT v FROM Vote v
+        LEFT JOIN v.comments c
+        WHERE 
+            (:status = 'ALL')
+            OR (:status = 'ONGOING' AND v.finishTime > CURRENT_TIMESTAMP)
+            OR (:status = 'ENDED' AND v.finishTime <= CURRENT_TIMESTAMP)
+        GROUP BY v
+        ORDER BY COUNT(c) DESC
+    """)
+    List<Vote> findVotesSortedByComments(@Param("status") String status, Pageable pageable);
+
+    // 좋아요 수 기준 정렬 (Reaction에서 LIKE만 세기)
+    @Query("""
+        SELECT v FROM Vote v
+        LEFT JOIN v.reactions r WITH r.reaction = 'LIKE'
+        WHERE 
+            (:status = 'ALL')
+            OR (:status = 'ONGOING' AND v.finishTime > CURRENT_TIMESTAMP)
+            OR (:status = 'ENDED' AND v.finishTime <= CURRENT_TIMESTAMP)
+        GROUP BY v
+        ORDER BY COUNT(r) DESC
+    """)
+    List<Vote> findVotesSortedByLikes(@Param("status") String status, Pageable pageable);
+
     // 최근 10개의 투표 조회
     List<Vote> findTop10ByUser_UserIdOrderByCreatedAtDesc(Long userId);
 

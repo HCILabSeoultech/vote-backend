@@ -21,194 +21,194 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VoteSchedulingService {
 
-    private final VoteStat6hRepository voteStat6hRepository;
+//    private final VoteStat6hRepository voteStat6hRepository;
     private final VoteStatHourlyRepository voteStatHourlyRepository;
     private final VoteRepository voteRepository;
 
-    /**
-     * [6시간 단위 통계 생성]
-     * - 현재 시간을 기준으로 누적 투표 수, 오늘의 투표 수, 댓글 수 통계를 계산
-     * - 각 항목에 대해 랭킹을 계산 (공동 순위 고려)
-     * - 이전 랭킹과 비교하여 순위 변동 계산
-     * - 이전 통계는 삭제
-     */
-    @Transactional
-    public void generate6hStats() {
-        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시 기준
-        LocalDateTime now = time.minusHours(9);
+//    /**
+//     * [6시간 단위 통계 생성]
+//     * - 현재 시간을 기준으로 누적 투표 수, 오늘의 투표 수, 댓글 수 통계를 계산
+//     * - 각 항목에 대해 랭킹을 계산 (공동 순위 고려)
+//     * - 이전 랭킹과 비교하여 순위 변동 계산
+//     * - 이전 통계는 삭제
+//     */
+//    @Transactional
+//    public void generate6hStats() {
+//        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시 기준
+//        LocalDateTime now = time.minusHours(9);
+//
+//        // 모든 투표 + 선택지 로딩
+//        List<Vote> votes = voteRepository.findAllWithSelections();
+//
+//        // 각 투표에 대한 통계 계산
+//        List<VoteStat6h> statList = votes.stream().map(vote -> {
+//            int totalVotes = vote.getSelections().size(); // 전체 투표 수
+//            int todayVotes = (int) vote.getSelections().stream()
+//                    .filter(s -> s.getCreatedAt().toLocalDate().equals(now.toLocalDate()))
+//                    .count(); // 오늘 투표 수
+//            int commentCount = (int) vote.getComments().stream()
+//                    .filter(c -> c.getParent() == null)
+//                    .count(); // 댓글 수
+//
+//            return VoteStat6h.builder()
+//                    .vote(vote)
+//                    .statTime(now)
+//                    .totalVoteCount(totalVotes)
+//                    .todayVoteCount(todayVotes)
+//                    .commentCount(commentCount)
+//                    .build();
+//        }).collect(Collectors.toList());
+//
+//        // 랭킹 계산 (득표수/오늘득표/댓글수 기준)
+//        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "total");
+//        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getTodayVoteCount).reversed(), "today");
+//        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "comment");
+//
+//        // 진행 중 투표만 필터링
+//        List<VoteStat6h> ongoingStats = statList.stream()
+//                .filter(stat -> stat.getVote().getFinishTime().isAfter(now))
+//                .collect(Collectors.toList());
+//
+//        // 진행 중 전용 랭킹 계산
+//        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
+//        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
+//
+//        // 종료된 투표만 필터링
+//        List<VoteStat6h> endedStats = statList.stream()
+//                .filter(stat -> stat.getVote().getFinishTime().isBefore(now))
+//                .collect(Collectors.toList());
+//
+//        // 종료 전용 랭킹 계산
+//        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "endedVote");
+//        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "endedComment");
+//
+//        // 직전 통계와 비교하여 순위 변화 계산
+//        LocalDateTime lastTime = voteStat6hRepository.findLatestStatTimeBefore(now).orElse(null);
+//        Map<Long, VoteStat6h> prevStatMap = lastTime != null
+//                ? voteStat6hRepository.findByStatTime(lastTime).stream().collect(
+//                Collectors.toMap(
+//                        stat -> stat.getVote().getVoteId(),
+//                        stat -> stat,
+//                        (s1, s2) -> s1
+//                )
+//        )
+//                : Collections.emptyMap();
+//
+//        voteStat6hRepository.deleteByStatTime(now);
+//        for (VoteStat6h stat : statList) {
+//            VoteStat6h prev = prevStatMap.get(stat.getVote().getVoteId());
+//
+//            // 각 기준에 대해 랭크 변화 설정
+//            stat.setRankChangeTotal(prev != null ? prev.getRankTotal() - stat.getRankTotal() : 0);
+//            stat.setRankChangeToday(prev != null ? prev.getRankToday() - stat.getRankToday() : 0);
+//            stat.setRankChangeComment(prev != null ? prev.getRankComment() - stat.getRankComment() : 0);
+//
+//            stat.setOngoingVoteCountRankChange(prev != null ? prev.getOngoingVoteCountRank() - stat.getOngoingVoteCountRank() : 0);
+//            stat.setOngoingCommentRankChange(prev != null ? prev.getOngoingCommentRank() - stat.getOngoingCommentRank() : 0);
+//
+//            stat.setEndedVoteCountRankChange(prev != null ? prev.getEndedVoteCountRank() - stat.getEndedVoteCountRank() : 0);
+//            stat.setEndedCommentRankChange(prev != null ? prev.getEndedCommentRank() - stat.getEndedCommentRank() : 0);
+//
+//            voteStat6hRepository.save(stat);
+//        }
+//
+//        // 직전 기록 삭제 (6시간치 보관 정책)
+//        if (lastTime != null) {
+//            voteStat6hRepository.deleteByStatTime(lastTime);
+//        }
+//    }
 
-        // 모든 투표 + 선택지 로딩
-        List<Vote> votes = voteRepository.findAllWithSelections();
+//    /**
+//     * 랭킹 할당 함수 (공동 순위 적용)
+//     */
+//    private void assignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+//        stats.sort(comparator); // 정렬
+//
+//        int rank = 1;
+//        int prevScore = -1;
+//
+//        for (int i = 0; i < stats.size(); i++) {
+//            VoteStat6h stat = stats.get(i);
+//            int score = switch (type) {
+//                case "total" -> stat.getTotalVoteCount();
+//                case "today" -> stat.getTodayVoteCount();
+//                case "comment" -> stat.getCommentCount();
+//                default -> throw new IllegalArgumentException("Invalid type");
+//            };
+//
+//            if (score != prevScore) {
+//                rank = i + 1;
+//            }
+//
+//            switch (type) {
+//                case "total" -> stat.setRankTotal(rank);
+//                case "today" -> stat.setRankToday(rank);
+//                case "comment" -> stat.setRankComment(rank);
+//            }
+//
+//            prevScore = score;
+//        }
+//    }
 
-        // 각 투표에 대한 통계 계산
-        List<VoteStat6h> statList = votes.stream().map(vote -> {
-            int totalVotes = vote.getSelections().size(); // 전체 투표 수
-            int todayVotes = (int) vote.getSelections().stream()
-                    .filter(s -> s.getCreatedAt().toLocalDate().equals(now.toLocalDate()))
-                    .count(); // 오늘 투표 수
-            int commentCount = (int) vote.getComments().stream()
-                    .filter(c -> c.getParent() == null)
-                    .count(); // 댓글 수
-
-            return VoteStat6h.builder()
-                    .vote(vote)
-                    .statTime(now)
-                    .totalVoteCount(totalVotes)
-                    .todayVoteCount(todayVotes)
-                    .commentCount(commentCount)
-                    .build();
-        }).collect(Collectors.toList());
-
-        // 랭킹 계산 (득표수/오늘득표/댓글수 기준)
-        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "total");
-        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getTodayVoteCount).reversed(), "today");
-        assignRanks(statList, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "comment");
-
-        // 진행 중 투표만 필터링
-        List<VoteStat6h> ongoingStats = statList.stream()
-                .filter(stat -> stat.getVote().getFinishTime().isAfter(now))
-                .collect(Collectors.toList());
-
-        // 진행 중 전용 랭킹 계산
-        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "ongoingVote");
-        ongoingAssignRanks(ongoingStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "ongoingComment");
-
-        // 종료된 투표만 필터링
-        List<VoteStat6h> endedStats = statList.stream()
-                .filter(stat -> stat.getVote().getFinishTime().isBefore(now))
-                .collect(Collectors.toList());
-
-        // 종료 전용 랭킹 계산
-        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getTotalVoteCount).reversed(), "endedVote");
-        endedAssignRanks(endedStats, Comparator.comparingInt(VoteStat6h::getCommentCount).reversed(), "endedComment");
-
-        // 직전 통계와 비교하여 순위 변화 계산
-        LocalDateTime lastTime = voteStat6hRepository.findLatestStatTimeBefore(now).orElse(null);
-        Map<Long, VoteStat6h> prevStatMap = lastTime != null
-                ? voteStat6hRepository.findByStatTime(lastTime).stream().collect(
-                Collectors.toMap(
-                        stat -> stat.getVote().getVoteId(),
-                        stat -> stat,
-                        (s1, s2) -> s1
-                )
-        )
-                : Collections.emptyMap();
-
-        voteStat6hRepository.deleteByStatTime(now);
-        for (VoteStat6h stat : statList) {
-            VoteStat6h prev = prevStatMap.get(stat.getVote().getVoteId());
-
-            // 각 기준에 대해 랭크 변화 설정
-            stat.setRankChangeTotal(prev != null ? prev.getRankTotal() - stat.getRankTotal() : 0);
-            stat.setRankChangeToday(prev != null ? prev.getRankToday() - stat.getRankToday() : 0);
-            stat.setRankChangeComment(prev != null ? prev.getRankComment() - stat.getRankComment() : 0);
-
-            stat.setOngoingVoteCountRankChange(prev != null ? prev.getOngoingVoteCountRank() - stat.getOngoingVoteCountRank() : 0);
-            stat.setOngoingCommentRankChange(prev != null ? prev.getOngoingCommentRank() - stat.getOngoingCommentRank() : 0);
-
-            stat.setEndedVoteCountRankChange(prev != null ? prev.getEndedVoteCountRank() - stat.getEndedVoteCountRank() : 0);
-            stat.setEndedCommentRankChange(prev != null ? prev.getEndedCommentRank() - stat.getEndedCommentRank() : 0);
-
-            voteStat6hRepository.save(stat);
-        }
-
-        // 직전 기록 삭제 (6시간치 보관 정책)
-        if (lastTime != null) {
-            voteStat6hRepository.deleteByStatTime(lastTime);
-        }
-    }
-
-    /**
-     * 랭킹 할당 함수 (공동 순위 적용)
-     */
-    private void assignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
-        stats.sort(comparator); // 정렬
-
-        int rank = 1;
-        int prevScore = -1;
-
-        for (int i = 0; i < stats.size(); i++) {
-            VoteStat6h stat = stats.get(i);
-            int score = switch (type) {
-                case "total" -> stat.getTotalVoteCount();
-                case "today" -> stat.getTodayVoteCount();
-                case "comment" -> stat.getCommentCount();
-                default -> throw new IllegalArgumentException("Invalid type");
-            };
-
-            if (score != prevScore) {
-                rank = i + 1;
-            }
-
-            switch (type) {
-                case "total" -> stat.setRankTotal(rank);
-                case "today" -> stat.setRankToday(rank);
-                case "comment" -> stat.setRankComment(rank);
-            }
-
-            prevScore = score;
-        }
-    }
-
-    /**
-     * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
-     */
-    private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
-        stats.sort(comparator); // 정렬
-
-        int rank = 1;
-        int prevScore = -1;
-
-        for (int i = 0; i < stats.size(); i++) {
-            VoteStat6h stat = stats.get(i);
-            int score = switch (type) {
-                case "ongoingVote" -> stat.getTotalVoteCount();
-                case "ongoingComment" -> stat.getCommentCount();
-                default -> throw new IllegalArgumentException("Invalid type");
-            };
-
-            if (score != prevScore) {
-                rank = i + 1;
-            }
-
-            switch (type) {
-                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
-                case "ongoingComment" -> stat.setOngoingCommentRank(rank);
-            }
-
-            prevScore = score;
-        }
-    }
-
-    /**
-     * 랭킹 할당 함수 (공동 순위 적용, 종료된 투표)
-     */
-    private void endedAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
-        stats.sort(comparator); // 정렬
-
-        int rank = 1;
-        int prevScore = -1;
-
-        for (int i = 0; i < stats.size(); i++) {
-            VoteStat6h stat = stats.get(i);
-            int score = switch (type) {
-                case "endedVote" -> stat.getTotalVoteCount();
-                case "endedComment" -> stat.getCommentCount();
-                default -> throw new IllegalArgumentException("Invalid type");
-            };
-
-            if (score != prevScore) {
-                rank = i + 1;
-            }
-
-            switch (type) {
-                case "endedVote" -> stat.setEndedVoteCountRank(rank);
-                case "endedComment" -> stat.setEndedCommentRank(rank);
-            }
-
-            prevScore = score;
-        }
-    }
+//    /**
+//     * 랭킹 할당 함수 (공동 순위 적용, 진행중인 투표)
+//     */
+//    private void ongoingAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+//        stats.sort(comparator); // 정렬
+//
+//        int rank = 1;
+//        int prevScore = -1;
+//
+//        for (int i = 0; i < stats.size(); i++) {
+//            VoteStat6h stat = stats.get(i);
+//            int score = switch (type) {
+//                case "ongoingVote" -> stat.getTotalVoteCount();
+//                case "ongoingComment" -> stat.getCommentCount();
+//                default -> throw new IllegalArgumentException("Invalid type");
+//            };
+//
+//            if (score != prevScore) {
+//                rank = i + 1;
+//            }
+//
+//            switch (type) {
+//                case "ongoingVote" -> stat.setOngoingVoteCountRank(rank);
+//                case "ongoingComment" -> stat.setOngoingCommentRank(rank);
+//            }
+//
+//            prevScore = score;
+//        }
+//    }
+//
+//    /**
+//     * 랭킹 할당 함수 (공동 순위 적용, 종료된 투표)
+//     */
+//    private void endedAssignRanks(List<VoteStat6h> stats, Comparator<VoteStat6h> comparator, String type) {
+//        stats.sort(comparator); // 정렬
+//
+//        int rank = 1;
+//        int prevScore = -1;
+//
+//        for (int i = 0; i < stats.size(); i++) {
+//            VoteStat6h stat = stats.get(i);
+//            int score = switch (type) {
+//                case "endedVote" -> stat.getTotalVoteCount();
+//                case "endedComment" -> stat.getCommentCount();
+//                default -> throw new IllegalArgumentException("Invalid type");
+//            };
+//
+//            if (score != prevScore) {
+//                rank = i + 1;
+//            }
+//
+//            switch (type) {
+//                case "endedVote" -> stat.setEndedVoteCountRank(rank);
+//                case "endedComment" -> stat.setEndedCommentRank(rank);
+//            }
+//
+//            prevScore = score;
+//        }
+//    }
 
     /**
      * [1시간 단위 통계 생성]
