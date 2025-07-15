@@ -23,7 +23,7 @@ public class VoteSummaryDto {
 //    private int todayVotes;              // 오늘 투표 수
     private int commentCount;            // 댓글 수
     private int likeCount;               // 좋아요 수
-//    private LocalDateTime finishTime;
+    private LocalDateTime finishTime;
 
 //    private int rankTotal;               // 누적 투표 기준 랭킹
 //    private int rankToday;               // 오늘 득표 기준 랭킹
@@ -67,6 +67,7 @@ public class VoteSummaryDto {
         return VoteSummaryDto.builder()
                 .voteId(vote.getVoteId())
                 .title(vote.getTitle())
+                .finishTime(vote.getFinishTime())
                 .thumbnailImageUrl(VoteSummaryDto.extractThumbnail(vote))
                 .totalVotes(vote.getSelections().size())
                 .commentCount((int) vote.getComments().stream().filter(c -> c.getParent() == null).count())
