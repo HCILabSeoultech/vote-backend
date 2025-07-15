@@ -27,11 +27,19 @@ public class VoteRankingController {
         return voteRankingService.getVotesSortedByTotalVotes(status, page, size);
     }
 
-    //오늘 득표순 정렬
-    @GetMapping("/today")
-    public List<VoteSummaryDto> getTodayPopularVotes(@RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "20") int size) {
-        return voteRankingService.getVotesSortedByTodayVotes(page, size);
+//    //오늘 득표순 정렬
+//    @GetMapping("/today")
+//    public List<VoteSummaryDto> getTodayPopularVotes(@RequestParam(defaultValue = "0") int page,
+//                                                     @RequestParam(defaultValue = "20") int size) {
+//        return voteRankingService.getVotesSortedByTodayVotes(page, size);
+//    }
+
+    //좋아요순 정렬
+    @GetMapping("/likes")
+    public List<VoteSummaryDto> getMostLikedVotes(@RequestParam VoteStatusType status,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "20") int size) {
+        return voteRankingService.getVotesSortedByLikes(status, page, size);
     }
 
     //댓글순 정렬
