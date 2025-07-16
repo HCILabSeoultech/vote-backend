@@ -107,6 +107,16 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse("success", newAccessToken));
     }
 
+    //토큰 검증
+    @GetMapping("/check")
+    public ResponseEntity<?> checkToken(@AuthenticationPrincipal CustumUserDetails user) {
+        return ResponseEntity.ok(Map.of(
+                "message", "token is valid",
+                "username", user.getUsername(),
+                "userId", user.getId()
+        ));
+    }
+
     //로그아웃
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@AuthenticationPrincipal CustumUserDetails user, HttpServletResponse response) {
