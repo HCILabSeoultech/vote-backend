@@ -69,6 +69,12 @@ public class VoteRankingService {
         return votes.stream().map(VoteSummaryDto::from).toList();
     }
 
+    public List<VoteSummaryDto> getTrendingVotes(VoteStatusType status, int page, int size) {
+        int offset = page * size;
+        List<Vote> votes = voteRepository.findVotesByTrending(status.name(), size, offset);
+        return votes.stream().map(VoteSummaryDto::from).toList();
+    }
+
 
 //    // 전체 득표순 정렬 (진행 중/종료 상태에 따라 분기)
 //    public List<VoteSummaryDto> getVotesSortedByTotalVotes(VoteStatusType status, int page, int size) {
@@ -128,35 +134,34 @@ public class VoteRankingService {
 //        }
 //    }
 
-    // 관심 급등순 정렬 (최근 1시간 투표 수 기준, 진행 중만)
-    public List<TrendingVoteDto> getTrendingVotes(int page, int size) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime latest = voteStatHourlyRepository.findLatestStatHour();
-        PageRequest pageable = PageRequest.of(page, size);
-
-        return voteStatHourlyRepository.findByStatHourAndVote_FinishTimeAfterOrderByVoteCountDesc(latest, now, pageable)
-                .stream().map(stat -> {
-                    Vote vote = stat.getVote();
-
-                    int todayVotes = (int) vote.getSelections().stream()
-                            .filter(s -> s.getCreatedAt().toLocalDate().equals(LocalDate.now()))
-                            .count();
-
-                    return TrendingVoteDto.builder()
-                            .voteId(vote.getVoteId())
-                            .title(vote.getTitle())
-                            .thumbnailImageUrl(extractThumbnail(vote))
-                            .hourlyVoteCount(stat.getVoteCount())
-                            .hourlyRank(stat.getRank())
-                            .hourlyRankChange(stat.getRankChange())
-                            .totalVotes(vote.getSelections().size())
-                            .todayVotes(todayVotes)
-                            .commentCount((int) vote.getComments().stream().filter(c -> c.getParent() == null).count())
-                            .finishTime(vote.getFinishTime())
-                            .build();
-                }).toList();
-    }
-
+//    // 관심 급등순 정렬 (최근 1시간 투표 수 기준, 진행 중만)
+//    public List<TrendingVoteDto> getTrendingVotes(int page, int size) {
+//        LocalDateTime now = LocalDateTime.now();
+//        LocalDateTime latest = voteStatHourlyRepository.findLatestStatHour();
+//        PageRequest pageable = PageRequest.of(page, size);
+//
+//        return voteStatHourlyRepository.findByStatHourAndVote_FinishTimeAfterOrderByVoteCountDesc(latest, now, pageable)
+//                .stream().map(stat -> {
+//                    Vote vote = stat.getVote();
+//
+//                    int todayVotes = (int) vote.getSelections().stream()
+//                            .filter(s -> s.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+//                            .count();
+//
+//                    return TrendingVoteDto.builder()
+//                            .voteId(vote.getVoteId())
+//                            .title(vote.getTitle())
+//                            .thumbnailImageUrl(extractThumbnail(vote))
+//                            .hourlyVoteCount(stat.getVoteCount())
+//                            .hourlyRank(stat.getRank())
+//                            .hourlyRankChange(stat.getRankChange())
+//                            .totalVotes(vote.getSelections().size())
+//                            .todayVotes(todayVotes)
+//                            .commentCount((int) vote.getComments().stream().filter(c -> c.getParent() == null).count())
+//                            .finishTime(vote.getFinishTime())
+//                            .build();
+//                }).toList();
+//    }
 //    // VoteStat6h → VoteSummaryDto 매핑
 //    private VoteSummaryDto toDto(VoteStat6h stat) {
 //        Vote vote = stat.getVote();

@@ -50,10 +50,18 @@ public class VoteRankingController {
         return voteRankingService.getVotesSortedByComments(status, page, size);
     }
 
+//    //급상승 정렬
+//    @GetMapping("/trending")
+//    public List<TrendingVoteDto> getTrendingVotes(@RequestParam(defaultValue = "0") int page,
+//                                                  @RequestParam(defaultValue = "20") int size) {
+//        return voteRankingService.getTrendingVotes(page, size);
+//    }
+
     //급상승 정렬
     @GetMapping("/trending")
-    public List<TrendingVoteDto> getTrendingVotes(@RequestParam(defaultValue = "0") int page,
+    public List<VoteSummaryDto> getTrendingVotes(@RequestParam VoteStatusType status,
+                                                  @RequestParam(defaultValue = "0") int page,
                                                   @RequestParam(defaultValue = "20") int size) {
-        return voteRankingService.getTrendingVotes(page, size);
+        return voteRankingService.getTrendingVotes(status, page, size);
     }
 }
