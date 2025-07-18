@@ -210,80 +210,80 @@ public class VoteSchedulingService {
 //        }
 //    }
 
-    /**
-     * [1시간 단위 통계 생성]
-     * - 최근 6시간 동안의 투표 수를 계산하여 저장
-     * - 공동 순위 고려하여 등수 계산
-     * - 이전 시간 대비 순위 변화도 기록
-     */
-    @Transactional
-    public void generateHourlyStats() {
-        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시
-        LocalDateTime now = time.minusHours(9);
-        LocalDateTime sixHourAgo = now.minusHours(6);
-
-        voteStatHourlyRepository.deleteByStatHour(now);
-
-        // 투표 + 선택지 로딩
-        List<Vote> votes = voteRepository.findAllWithSelections();
-
-        // 최근 6시간 투표 수 계산
-        List<VoteStatHourly> statList = votes.stream().map(vote -> {
-            int voteCount = (int) vote.getSelections().stream()
-                    .filter(s -> {
-                        LocalDateTime created = s.getCreatedAt();
-                        return created.isAfter(sixHourAgo) && !created.isAfter(now);
-                    }).count();
-
-            return VoteStatHourly.builder()
-                    .vote(vote)
-                    .statHour(now)
-                    .voteCount(voteCount)
-                    .createdAt(now)
-                    .build();
-        }).collect(Collectors.toList());
-
-        // 공동 순위 계산
-        statList.sort(Comparator.comparingInt(VoteStatHourly::getVoteCount).reversed());
-        int rank = 1;
-        int prevScore = -1;
-
-        for (int i = 0; i < statList.size(); i++) {
-            VoteStatHourly stat = statList.get(i);
-            int score = stat.getVoteCount();
-
-            if (score != prevScore) {
-                rank = i + 1;
-            }
-
-            stat.setRank(rank);
-            prevScore = score;
-        }
-
-        // 직전 1시간 통계 불러오기
-        LocalDateTime lastHour = voteStatHourlyRepository.findLatestStatTimeBefore(now).orElse(null);
-        Map<Long, VoteStatHourly> prevMap = lastHour != null
-                ? voteStatHourlyRepository.findByStatHour(lastHour).stream().collect(
-                Collectors.toMap(
-                        s -> s.getVote().getVoteId(),
-                        s -> s,
-                        (s1, s2) -> s1
-                )
-        )
-                : Collections.emptyMap();
-
-        // 순위 변화 계산
-        for (VoteStatHourly stat : statList) {
-            VoteStatHourly prev = prevMap.get(stat.getVote().getVoteId());
-            stat.setRankChange(prev != null ? prev.getRank() - stat.getRank() : 0);
-            voteStatHourlyRepository.save(stat);
-        }
-        System.out.println("저장완료");
-
-        // 이전 시간 통계 삭제
-        if (lastHour != null) {
-            voteStatHourlyRepository.deleteByStatHour(lastHour);
-            System.out.println("삭제완료");
-        }
-    }
+//    /**
+//     * [1시간 단위 통계 생성]
+//     * - 최근 6시간 동안의 투표 수를 계산하여 저장
+//     * - 공동 순위 고려하여 등수 계산
+//     * - 이전 시간 대비 순위 변화도 기록
+//     */
+//    @Transactional
+//    public void generateHourlyStats() {
+//        LocalDateTime time = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0); // 정시
+//        LocalDateTime now = time.minusHours(9);
+//        LocalDateTime sixHourAgo = now.minusHours(6);
+//
+//        voteStatHourlyRepository.deleteByStatHour(now);
+//
+//        // 투표 + 선택지 로딩
+//        List<Vote> votes = voteRepository.findAllWithSelections();
+//
+//        // 최근 6시간 투표 수 계산
+//        List<VoteStatHourly> statList = votes.stream().map(vote -> {
+//            int voteCount = (int) vote.getSelections().stream()
+//                    .filter(s -> {
+//                        LocalDateTime created = s.getCreatedAt();
+//                        return created.isAfter(sixHourAgo) && !created.isAfter(now);
+//                    }).count();
+//
+//            return VoteStatHourly.builder()
+//                    .vote(vote)
+//                    .statHour(now)
+//                    .voteCount(voteCount)
+//                    .createdAt(now)
+//                    .build();
+//        }).collect(Collectors.toList());
+//
+//        // 공동 순위 계산
+//        statList.sort(Comparator.comparingInt(VoteStatHourly::getVoteCount).reversed());
+//        int rank = 1;
+//        int prevScore = -1;
+//
+//        for (int i = 0; i < statList.size(); i++) {
+//            VoteStatHourly stat = statList.get(i);
+//            int score = stat.getVoteCount();
+//
+//            if (score != prevScore) {
+//                rank = i + 1;
+//            }
+//
+//            stat.setRank(rank);
+//            prevScore = score;
+//        }
+//
+//        // 직전 1시간 통계 불러오기
+//        LocalDateTime lastHour = voteStatHourlyRepository.findLatestStatTimeBefore(now).orElse(null);
+//        Map<Long, VoteStatHourly> prevMap = lastHour != null
+//                ? voteStatHourlyRepository.findByStatHour(lastHour).stream().collect(
+//                Collectors.toMap(
+//                        s -> s.getVote().getVoteId(),
+//                        s -> s,
+//                        (s1, s2) -> s1
+//                )
+//        )
+//                : Collections.emptyMap();
+//
+//        // 순위 변화 계산
+//        for (VoteStatHourly stat : statList) {
+//            VoteStatHourly prev = prevMap.get(stat.getVote().getVoteId());
+//            stat.setRankChange(prev != null ? prev.getRank() - stat.getRank() : 0);
+//            voteStatHourlyRepository.save(stat);
+//        }
+//        System.out.println("저장완료");
+//
+//        // 이전 시간 통계 삭제
+//        if (lastHour != null) {
+//            voteStatHourlyRepository.deleteByStatHour(lastHour);
+//            System.out.println("삭제완료");
+//        }
+//    }
 }

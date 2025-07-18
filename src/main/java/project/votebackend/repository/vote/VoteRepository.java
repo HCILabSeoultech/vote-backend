@@ -238,4 +238,48 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     """,
             nativeQuery = true)
     Page<Object[]> searchVotesWithStats(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query(value = """
+    SELECT 
+        v.*, 
+        COALESCE(c.comment_count, 0) AS comment_count,
+        COALESCE(r.like_count, 0) AS like_count,
+        COALESCE(s.vote_count, 0) AS vote_count,
+        (
+            COALESCE(c.comment_count, 0) * 1.5 +
+            COALESCE(r.like_count, 0) * 1.2 +
+            COALESCE(s.vote_count, 0) * 1.0
+        ) AS popularity_score
+    FROM vote v
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS comment_count
+        FROM comment
+        WHERE parent_id IS NULL
+        GROUP BY vote_id
+    ) c ON v.vote_id = c.vote_id
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS like_count
+        FROM reaction
+        WHERE reaction = 'LIKE'
+        GROUP BY vote_id
+    ) r ON v.vote_id = r.vote_id
+    LEFT JOIN (
+        SELECT vote_id, COUNT(*) AS vote_count
+        FROM vote_selections
+        GROUP BY vote_id
+    ) s ON v.vote_id = s.vote_id
+    WHERE 
+        (:status = 'ALL')
+        OR (:status = 'ONGOING' AND v.finish_time > CURRENT_TIMESTAMP)
+        OR (:status = 'ENDED' AND v.finish_time <= CURRENT_TIMESTAMP)
+    ORDER BY popularity_score DESC
+    LIMIT :limit OFFSET :offset
+    """,
+            nativeQuery = true)
+    List<Vote> findVotesByTrending(
+            @Param("status") String status,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
 }
