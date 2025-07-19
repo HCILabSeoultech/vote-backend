@@ -92,4 +92,66 @@ public class FollowListService {
                 })
                 .toList();
     }
+
+    // 특정 사용자의 팔로워 목록 조회
+    public List<FollowUserDto> getFollowersOfUser(Long targetUserId, Long myUserId) {
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        List<Follow> followers = followRepository.findByFollowing(target);
+        List<Long> followerIds = followers.stream()
+                .map(f -> f.getFollower().getUserId())
+                .toList();
+
+        if (followerIds.isEmpty()) return List.of();
+
+        List<Follow> myFollowings = followRepository.findByFollower_UserIdAndFollowing_UserIdIn(myUserId, followerIds);
+        Set<Long> iFollowSet = myFollowings.stream()
+                .map(f -> f.getFollowing().getUserId())
+                .collect(Collectors.toSet());
+
+        return followers.stream()
+                .map(f -> {
+                    User follower = f.getFollower();
+                    return FollowUserDto.builder()
+                            .userId(follower.getUserId())
+                            .name(follower.getName())
+                            .profileImage(follower.getProfileImage())
+                            .introduction(follower.getIntroduction())
+                            .isFollowing(iFollowSet.contains(follower.getUserId()))
+                            .build();
+                })
+                .toList();
+    }
+
+    // 특정 사용자의 팔로잉 목록 조회
+    public List<FollowUserDto> getFollowingsOfUser(Long targetUserId, Long myUserId) {
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        List<Follow> followings = followRepository.findByFollower(target);
+        List<Long> followingIds = followings.stream()
+                .map(f -> f.getFollowing().getUserId())
+                .toList();
+
+        if (followingIds.isEmpty()) return List.of();
+
+        List<Follow> myFollowings = followRepository.findByFollower_UserIdAndFollowing_UserIdIn(myUserId, followingIds);
+        Set<Long> iFollowSet = myFollowings.stream()
+                .map(f -> f.getFollowing().getUserId())
+                .collect(Collectors.toSet());
+
+        return followings.stream()
+                .map(f -> {
+                    User following = f.getFollowing();
+                    return FollowUserDto.builder()
+                            .userId(following.getUserId())
+                            .name(following.getName())
+                            .profileImage(following.getProfileImage())
+                            .introduction(following.getIntroduction())
+                            .isFollowing(iFollowSet.contains(following.getUserId())) // 나 기준으로 체크
+                            .build();
+                })
+                .toList();
+    }
 }
