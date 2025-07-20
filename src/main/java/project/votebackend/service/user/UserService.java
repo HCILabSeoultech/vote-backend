@@ -110,6 +110,7 @@ public class UserService {
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
+        Long participatedCount = voteSelectRepository.countByUserId(userId);
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
@@ -123,11 +124,13 @@ public class UserService {
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .introduction(user.getIntroduction())
+                .address(user.getAddress())
                 .point(user.getPoint())
                 .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
                 .posts(voteDto)
                 .postCount(postCount)
+                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())

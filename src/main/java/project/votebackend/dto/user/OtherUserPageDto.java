@@ -16,12 +16,14 @@ public class OtherUserPageDto {
     private String name;
     private String profileImage;
     private String introduction;
+    private String address;
     private String grade;
     private Long avgParticipantCount;
     private Long point;
     private Long followerCount;
     private Long followingCount;
     private Long postCount;
+    private Long participatedCount;
     private LocalDateTime createdAt;
     private Page<LoadVoteDto> posts;
 }
