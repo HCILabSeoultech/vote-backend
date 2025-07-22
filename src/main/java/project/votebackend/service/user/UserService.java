@@ -15,6 +15,7 @@ import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.user.*;
 import project.votebackend.dto.vote.LoadVoteDto;
+import project.votebackend.dto.vote.OtherUserVotes;
 import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
@@ -100,13 +101,9 @@ public class UserService {
 
         // 3. 해당 사용자의 투표글 조회
         Page<Vote> votes = voteRepository.findByUser_UserIdAndStatus(userId, VoteStatus.PUBLISHED, sortedPageable);
-        List<Long> voteIds = votes.getContent().stream()
-                .map(Vote::getVoteId)
-                .toList();
 
-        // 4. 통계 수집 및 DTO 변환
-        Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
-        Page<LoadVoteDto> voteDto = voteStatisticsUtil.getLoadVoteDtos(userId, votes, stats, sortedPageable);
+        // 4. DTO 변환
+        Page<OtherUserVotes> voteDto = OtherUserVotes.otherUserVotes(votes, sortedPageable);
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
