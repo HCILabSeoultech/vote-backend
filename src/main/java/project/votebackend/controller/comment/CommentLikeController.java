@@ -1,5 +1,6 @@
 package project.votebackend.controller.comment;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,7 @@ public class CommentLikeController {
 
     //댓글 좋아요
     @PostMapping("/{commentId}")
+    @Operation(summary = "댓글 좋아요 API", description = "댓글에 좋아요를 누릅니다(토글 형식)")
     public ResponseEntity<Map<String, Object>> like(
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserDetails userDetails) {

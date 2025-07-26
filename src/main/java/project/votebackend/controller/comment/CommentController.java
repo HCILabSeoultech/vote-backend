@@ -1,5 +1,6 @@
 package project.votebackend.controller.comment;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class CommentController {
 
     // 댓글 작성
     @PostMapping("/{voteId}")
+    @Operation(summary = "댓글 생성 API", description = "댓글을 생성합니다.")
     public ResponseEntity<CommentResponse> addComment(
             @PathVariable Long voteId,
             @RequestBody CommentRequest request,
@@ -39,6 +41,7 @@ public class CommentController {
 
     // 댓글 조회
     @GetMapping("/{voteId}")
+    @Operation(summary = "댓글 조회 API", description = "댓글을 조회합니다.")
     public ResponseEntity<Map<String, Object>> getComments(
             @PathVariable Long voteId,
             @RequestParam(defaultValue = "0") int page,
@@ -51,6 +54,7 @@ public class CommentController {
 
     // 댓글 수정
     @PutMapping("/{commentId}")
+    @Operation(summary = "댓글 수정 API", description = "댓글을 수정합니다.")
     public ResponseEntity<CommentResponse> editComment(
             @PathVariable Long commentId,
             @RequestBody CommentRequest request,
@@ -67,6 +71,7 @@ public class CommentController {
 
     // 댓글 삭제
     @DeleteMapping("/{commentId}")
+    @Operation(summary = "댓글 삭제 API", description = "댓글을 삭제합니다.")
     public ResponseEntity<?> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserDetails userDetails) {
