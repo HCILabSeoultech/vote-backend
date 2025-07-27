@@ -1,5 +1,6 @@
 package project.votebackend.controller.vote;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ public class VoteLoadController {
 
     //메인페이지 투표 불러오기 (자신이 작성한, 자신이 선택한 카테고리, 자신이 팔로우한 사람의 글)
     @GetMapping("/load-main-page-votes")
+    @Operation(summary = "메인페이지 투표 조회 API", description = "메인페이지에서의 투표들을 조회합니다.")
     public ResponseEntity<Map<String, Object>> loadMainPageVotes(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -38,6 +40,7 @@ public class VoteLoadController {
 
     //단일 투표 불러오기
     @GetMapping("/{voteId}")
+    @Operation(summary = "단일 투표 조회 API", description = "단일 투표를 조회합니다.")
     public ResponseEntity<LoadVoteDto> getVoteById(
             @PathVariable Long voteId,
             @AuthenticationPrincipal CustumUserDetails userDetails
@@ -48,6 +51,7 @@ public class VoteLoadController {
 
     //특정 카테고리의 게시물 불러오기
     @GetMapping("/category/{categoryId}")
+    @Operation(summary = "카테고리 투표 조회 API", description = "특정 카테고리의 투표들을 조회합니다.")
     public ResponseEntity<Map<String, Object>> getVotesByCategory(
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,

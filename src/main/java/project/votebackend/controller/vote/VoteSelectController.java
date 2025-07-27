@@ -1,5 +1,6 @@
 package project.votebackend.controller.vote;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,7 @@ public class VoteSelectController {
 
     //투표 선택
     @PostMapping("/select")
+    @Operation(summary = "투표 참여 API", description = "투표에 참여합니다.")
     public ResponseEntity<?> voteSelect(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestBody VoteSelectRequest request
@@ -32,6 +34,7 @@ public class VoteSelectController {
 
     //투표 취소
     @PostMapping("/cancel")
+    @Operation(summary = "투표 취소 API", description = "투표를 취소합니다.")
     public ResponseEntity<?> cancelVote(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestBody VoteSelectRequest request

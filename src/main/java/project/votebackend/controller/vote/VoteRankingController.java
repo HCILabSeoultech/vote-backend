@@ -1,5 +1,6 @@
 package project.votebackend.controller.vote;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ public class VoteRankingController {
 
     //전체 득표순 정렬
     @GetMapping("/popular")
+    @Operation(summary = "전체 득표순 투표 조회 API", description = "득표가 많은 순으로 투표를 조회합니다.")
     public List<VoteSummaryDto> getPopularVotes(@RequestParam VoteStatusType status,
                                                 @RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size) {
@@ -36,6 +38,8 @@ public class VoteRankingController {
 
     //좋아요순 정렬
     @GetMapping("/likes")
+    @Operation(summary = "전체 좋아요순 투표 조회 API", description = "좋아요가 많은 순으로 투표를 조회합니다.")
+
     public List<VoteSummaryDto> getMostLikedVotes(@RequestParam VoteStatusType status,
                                                 @RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size) {
@@ -44,6 +48,8 @@ public class VoteRankingController {
 
     //댓글순 정렬
     @GetMapping("/comments")
+    @Operation(summary = "전체 댓글순 투표 조회 API", description = "댓글이 많은 순으로 투표를 조회합니다.")
+
     public List<VoteSummaryDto> getMostCommentedVotes(@RequestParam VoteStatusType status,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size) {
@@ -59,6 +65,7 @@ public class VoteRankingController {
 
     //급상승 정렬
     @GetMapping("/trending")
+    @Operation(summary = "전체 인기순 투표 조회 API", description = "인기가 많은 순으로 투표를 조회합니다.")
     public List<VoteSummaryDto> getTrendingVotes(@RequestParam VoteStatusType status,
                                                   @RequestParam(defaultValue = "0") int page,
                                                   @RequestParam(defaultValue = "20") int size) {
