@@ -1,5 +1,6 @@
 package project.votebackend.controller.share;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +31,7 @@ public class VoteShareController {
 
     //공유용으로 사용되기 때문에 null이 가능
     @GetMapping("/{voteId}")
+    @Operation(summary = "공유된 투표 조회 API", description = "공유된 링크에서 게시물을 확인합니다.")
     public ResponseEntity<LoadVoteDto> getVoteById(
             @PathVariable Long voteId,
             @AuthenticationPrincipal CustumUserDetails userDetails // null일 수 있음

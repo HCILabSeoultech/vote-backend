@@ -1,5 +1,6 @@
 package project.votebackend.controller.storage;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,6 +27,7 @@ public class StorageController {
 
     //투표한 게시물 불러오기
     @GetMapping("/voted")
+    @Operation(summary = "투표한 게시물 조회 API", description = "내가 투표한 게시물을 조회합니다.")
     public List<VoteSummaryDto> getVotedPosts(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
@@ -35,6 +37,7 @@ public class StorageController {
 
     //북마크한 게시물 불러오기
     @GetMapping("/bookmarked")
+    @Operation(summary = "북마크한 게시물 조회 API", description = "내가 북마크한 게시물을 조회합니다.")
     public List<VoteSummaryDto> getBookmarkedPosts(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
@@ -44,6 +47,7 @@ public class StorageController {
 
     //내가 작성한 게시물 불러오기
     @GetMapping("/created")
+    @Operation(summary = "작성한 게시물 조회 API", description = "내가 작성한 게시물을 조회합니다.")
     public List<VoteSummaryDto> getCreatedPosts(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable

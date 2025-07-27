@@ -1,5 +1,6 @@
 package project.votebackend.controller.search;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ public class SearchController {
 
     //쿼리문을 이용한 투표 검색
     @GetMapping("/vote")
+    @Operation(summary = "게시글 검색 API", description = "게시글을 제목으로 검색합니다.")
     public Page<VoteSearchResponse> searchVotes(
             @RequestParam("keyword") String keyword,
             @PageableDefault(size = 20, page = 0) Pageable pageable

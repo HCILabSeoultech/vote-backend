@@ -1,5 +1,6 @@
 package project.votebackend.controller.user;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ public class UserController {
 
     //마이페이지 조회
     @GetMapping("/mypage")
+    @Operation(summary = "마이페이지 조회 API", description = "마이페이지를 조회합니다.")
     public ResponseEntity<UserPageDto> getMyPage(
             @AuthenticationPrincipal CustumUserDetails userDetails
     ) {
@@ -31,6 +33,7 @@ public class UserController {
 
     //다른 사용자 조회
     @GetMapping("/{userId}")
+    @Operation(summary = "다른 사람 조회 API", description = "다른 사람의 페이지를 조회합니다.")
     public ResponseEntity<OtherUserPageDto> getUserPage(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
@@ -42,6 +45,7 @@ public class UserController {
 
     //회원정보 수정
     @PatchMapping("/update")
+    @Operation(summary = "회원정보 수정 API", description = "회원정보를 수정합니다.")
     public ResponseEntity<UserResponseDto> updateUserInfo(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestBody @Valid UserUpdateDto dto
@@ -52,6 +56,7 @@ public class UserController {
 
     //내 정보 가져오기
     @GetMapping("/info")
+    @Operation(summary = "회원정보 수정 시 나의 정보 조회 API", description = "회원정보 수정 시 나의 정보를 조회합니다.")
     public ResponseEntity<UserInfoDto> getUserInfo(@AuthenticationPrincipal CustumUserDetails userDetails) {
         UserInfoDto userInfo = userService.getUserInfo(userDetails.getId());
         return ResponseEntity.ok(userInfo);
