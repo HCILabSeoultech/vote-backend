@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.elasticSearch.VoteDocument;
-import project.votebackend.service.elasticsearch.SearchService;
+import project.votebackend.service.search.SearchService;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,12 +33,6 @@ public class SearchController {
     ) {
         return searchService.searchVotes(keyword, pageable);
     }
-
-//    //투표 검색어 입력
-//    @GetMapping("/vote")
-//    public List<VoteDocument> searchVotes(@RequestParam("keyword") String keyword) throws IOException {
-//        return searchService.searchVotes(keyword);
-//    }
 
     //유저 검색어 입력
     @GetMapping("/user")

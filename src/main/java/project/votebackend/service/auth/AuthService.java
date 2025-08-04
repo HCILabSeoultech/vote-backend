@@ -1,6 +1,5 @@
 package project.votebackend.service.auth;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,6 @@ import project.votebackend.domain.user.UserInterest;
 import project.votebackend.dto.login.LoginRequest;
 import project.votebackend.dto.login.LoginResponse;
 import project.votebackend.dto.signup.UserSignupDto;
-import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
 import project.votebackend.repository.category.CategoryRepository;
@@ -26,7 +24,6 @@ import project.votebackend.type.ErrorCode;
 import project.votebackend.type.Grade;
 import project.votebackend.util.JwtUtil;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +37,6 @@ public class AuthService {
     private final CategoryRepository categoryRepository;
     private final UserInterestRepository userInterestRepository;
     private final JwtUtil jwtUtil;
-    private final ElasticsearchClient elasticsearchClient;
     private final RedisTemplate<String, String> redisTemplate;
 
 
@@ -83,18 +79,6 @@ public class AuthService {
                         .build();
                 userInterestRepository.save(interest);
             }
-        }
-
-        //Elasticsearch에 저장
-        try {
-            UserDocument doc = UserDocument.fromEntity(savedUser);
-            elasticsearchClient.index(i -> i
-                    .index("users")
-                    .id(String.valueOf(doc.getId()))
-                    .document(doc)
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 저장 실패", e);
         }
     }
 

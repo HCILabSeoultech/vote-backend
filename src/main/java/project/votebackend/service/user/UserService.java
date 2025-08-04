@@ -45,11 +45,8 @@ public class UserService {
     private final VoteRepository voteRepository;
     private final FollowRepository followRepository;
     private final VoteSelectRepository voteSelectRepository;
-    private final VoteStatisticsUtil voteStatisticsUtil;
     private final UserInterestRepository userInterestRepository;
     private final CategoryRepository categoryRepository;
-    private final FileManagingService fileManagingService;
-    private final ElasticsearchClient elasticsearchClient;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
     public UserPageDto getMyPage(Long userId) {
@@ -70,16 +67,13 @@ public class UserService {
 
         // 3. DTO 조립 및 반환
         return UserPageDto.builder()
-                .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .introduction(user.getIntroduction())
                 .address(user.getAddress())
                 .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
-                .point(user.getPoint())
                 .postCount(postCount)
                 .participatedCount(participatedCount)
                 .createdAt(user.getCreatedAt())
@@ -117,17 +111,12 @@ public class UserService {
 
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
-                .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .introduction(user.getIntroduction())
                 .address(user.getAddress())
-                .point(user.getPoint())
-                .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
                 .posts(voteDto)
                 .postCount(postCount)
-                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())
