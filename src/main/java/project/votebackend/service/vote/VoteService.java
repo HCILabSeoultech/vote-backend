@@ -1,6 +1,5 @@
 package project.votebackend.service.vote;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,6 @@ import project.votebackend.domain.vote.*;
 import project.votebackend.dto.vote.CreateVoteRequest;
 import project.votebackend.dto.vote.UpdateVoteRequest;
 import project.votebackend.dto.vote.VoteOptionDto;
-import project.votebackend.elasticSearch.VoteDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
 import project.votebackend.exception.VoteException;
@@ -41,7 +39,6 @@ public class VoteService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final VoteOptionRepository voteOptionRepository;
-    private final ElasticsearchClient elasticsearchClient;
     private final VoteImageRepository voteImageRepository;
     private final VoteStat6hRepository voteStat6hRepository;
     private final VoteStatHourlyRepository voteStatHourlyRepository;
@@ -151,20 +148,6 @@ public class VoteService {
         }
 
         return voteRepository.save(vote);
-
-        //Elasticsearch에 저장
-//        try {
-//            VoteDocument doc = VoteDocument.fromEntity(savedVote);
-//            elasticsearchClient.index(i -> i
-//                    .index("votes")
-//                    .id(String.valueOf(doc.getId()))
-//                    .document(doc)
-//            );
-//        } catch (IOException e) {
-//            log.error("Elasticsearch 저장 실패", e);
-//        }
-
-//        return savedVote;
     }
 
     // 투표 업로드
@@ -178,18 +161,6 @@ public class VoteService {
         }
 
         vote.setStatus(VoteStatus.PUBLISHED);
-
-        // 게시할 때 Elasticsearch 저장
-        try {
-            VoteDocument doc = VoteDocument.fromEntity(vote);
-            elasticsearchClient.index(i -> i
-                    .index("votes")
-                    .id(String.valueOf(doc.getId()))
-                    .document(doc)
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 저장 실패", e);
-        }
     }
 
     // 투표 재업로드
@@ -232,19 +203,6 @@ public class VoteService {
                     .collect(Collectors.toList());
             voteImageRepository.saveAll(newImages);
         }
-
-        //Elasticsearch에 저장
-//        try {
-//            VoteDocument doc = VoteDocument.fromEntity(newVote);
-//            elasticsearchClient.index(i -> i
-//                    .index("votes")
-//                    .id(String.valueOf(doc.getId()))
-//                    .document(doc)
-//            );
-//        } catch (IOException e) {
-//            log.error("Elasticsearch 저장 실패", e);
-//        }
-
         return newVote.getVoteId();
     }
 
@@ -264,17 +222,6 @@ public class VoteService {
         voteStat6hRepository.flush();
 
         voteRepository.delete(vote);
-
-        // Elasticsearch에서도 삭제
-        try {
-            elasticsearchClient.delete(d -> d
-                    .index("votes")
-                    .id(String.valueOf(voteId))
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 삭제 실패", e);
-
-        }
     }
 
     // 투표 수정

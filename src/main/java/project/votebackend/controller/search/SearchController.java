@@ -10,12 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.votebackend.dto.vote.VoteSearchResponse;
-import project.votebackend.elasticSearch.UserDocument;
-import project.votebackend.elasticSearch.VoteDocument;
-import project.votebackend.service.elasticsearch.SearchService;
-
-import java.io.IOException;
-import java.util.List;
+import project.votebackend.service.search.SearchService;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,17 +27,5 @@ public class SearchController {
             @PageableDefault(size = 20, page = 0) Pageable pageable
     ) {
         return searchService.searchVotes(keyword, pageable);
-    }
-
-//    //투표 검색어 입력
-//    @GetMapping("/vote")
-//    public List<VoteDocument> searchVotes(@RequestParam("keyword") String keyword) throws IOException {
-//        return searchService.searchVotes(keyword);
-//    }
-
-    //유저 검색어 입력
-    @GetMapping("/user")
-    public List<UserDocument> searchUsers(@RequestParam("keyword") String keyword) throws IOException {
-        return searchService.searchUsers(keyword);
     }
 }

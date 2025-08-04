@@ -31,7 +31,6 @@ public class LoadVoteDto {
     private String link;
     private String categoryName;
     private Long userId;
-    private String username;
     private String name;
     private LocalDateTime createdAt;
     private List<VoteImageDto> images;
@@ -48,7 +47,6 @@ public class LoadVoteDto {
     @JsonProperty("isLiked")
     private boolean isLiked;
 
-    private int totalVotes;
     private Long selectedOptionId;
 
     // 쿼리 최적화를 위해 미리 계산된 통계 맵을 사용하는 변환 메서드
@@ -101,7 +99,6 @@ public class LoadVoteDto {
                 .link(vote.getLink())
                 .categoryName(vote.getCategory().getName())
                 .userId(vote.getUser().getUserId())
-                .username(vote.getUser().getUsername())
                 .name(vote.getUser().getName())
                 .createdAt(vote.getCreatedAt())
                 .finishTime(vote.getFinishTime())
@@ -112,7 +109,6 @@ public class LoadVoteDto {
                 .isLiked(isLiked)
                 .isBookmarked(isBookmarked)
                 .profileImage(vote.getUser().getProfileImage())
-                .totalVotes(totalVotes)
                 .voteStatus(vote.getStatus())
                 .voteType(vote.getVoteType())
                 .selectedOptionId(selectedOptionId.orElse(null))

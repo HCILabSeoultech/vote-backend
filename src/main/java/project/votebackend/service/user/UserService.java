@@ -1,6 +1,5 @@
 package project.votebackend.service.user;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,9 +13,7 @@ import project.votebackend.domain.user.User;
 import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.user.*;
-import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.dto.vote.OtherUserVotes;
-import project.votebackend.elasticSearch.UserDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
 import project.votebackend.repository.category.CategoryRepository;
@@ -25,17 +22,12 @@ import project.votebackend.repository.user.UserInterestRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
-import project.votebackend.service.file.FileManagingService;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.type.Grade;
 import project.votebackend.type.VoteStatus;
-import project.votebackend.util.VoteStatisticsUtil;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-
 
 @Service
 @RequiredArgsConstructor
@@ -45,11 +37,8 @@ public class UserService {
     private final VoteRepository voteRepository;
     private final FollowRepository followRepository;
     private final VoteSelectRepository voteSelectRepository;
-    private final VoteStatisticsUtil voteStatisticsUtil;
     private final UserInterestRepository userInterestRepository;
     private final CategoryRepository categoryRepository;
-    private final FileManagingService fileManagingService;
-    private final ElasticsearchClient elasticsearchClient;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
     public UserPageDto getMyPage(Long userId) {
@@ -70,16 +59,13 @@ public class UserService {
 
         // 3. DTO 조립 및 반환
         return UserPageDto.builder()
-                .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .introduction(user.getIntroduction())
                 .address(user.getAddress())
                 .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
-                .point(user.getPoint())
                 .postCount(postCount)
                 .participatedCount(participatedCount)
                 .createdAt(user.getCreatedAt())
@@ -117,17 +103,12 @@ public class UserService {
 
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
-                .username(user.getUsername())
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .introduction(user.getIntroduction())
                 .address(user.getAddress())
-                .point(user.getPoint())
-                .grade(dynamicGrade.getLabel())
                 .avgParticipantCount(avg)
                 .posts(voteDto)
                 .postCount(postCount)
-                .participatedCount(participatedCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())
@@ -190,17 +171,6 @@ public class UserService {
         List<String> interestCategoryNames = userInterestRepository.findByUser(user).stream()
                 .map(ui -> ui.getCategory().getName())
                 .toList();
-
-        // Elasticsearch 업데이트
-//        try {
-//            elasticsearchClient.delete(d -> d.index("users").id(String.valueOf(user.getUserId())));
-//            elasticsearchClient.index(i -> i
-//                    .index("users")
-//                    .id(String.valueOf(user.getUserId()))
-//                    .document(UserDocument.fromEntity(user)));
-//        } catch (IOException e) {
-//            log.error("Elasticsearch 업데이트 실패", e);
-//        }
 
         return UserResponseDto.fromEntity(user, interestCategoryNames);
     }

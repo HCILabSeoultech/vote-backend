@@ -53,7 +53,6 @@ public class FollowListService {
                             .userId(follower.getUserId())
                             .name(follower.getName())
                             .profileImage(follower.getProfileImage())
-                            .introduction(follower.getIntroduction())
                             .isFollowing(iFollowSet.contains(follower.getUserId()))
                             .build();
                 })
@@ -86,7 +85,6 @@ public class FollowListService {
                             .userId(following.getUserId())
                             .name(following.getName())
                             .profileImage(following.getProfileImage())
-                            .introduction(following.getIntroduction())
                             .isFollowing(true)
                             .build();
                 })
@@ -117,7 +115,6 @@ public class FollowListService {
                             .userId(follower.getUserId())
                             .name(follower.getName())
                             .profileImage(follower.getProfileImage())
-                            .introduction(follower.getIntroduction())
                             .isFollowing(iFollowSet.contains(follower.getUserId()))
                             .build();
                 })
@@ -148,7 +145,6 @@ public class FollowListService {
                             .userId(following.getUserId())
                             .name(following.getName())
                             .profileImage(following.getProfileImage())
-                            .introduction(following.getIntroduction())
                             .isFollowing(iFollowSet.contains(following.getUserId())) // 나 기준으로 체크
                             .build();
                 })
