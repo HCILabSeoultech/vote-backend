@@ -14,6 +14,7 @@ import project.votebackend.domain.user.UserInterest;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.user.*;
 import project.votebackend.dto.vote.OtherUserVotes;
+import project.votebackend.dto.vote.VoteSummaryDto;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
 import project.votebackend.repository.category.CategoryRepository;
@@ -89,17 +90,15 @@ public class UserService {
         Page<Vote> votes = voteRepository.findByUser_UserIdAndStatus(userId, VoteStatus.PUBLISHED, sortedPageable);
 
         // 4. DTO 변환
-        Page<OtherUserVotes> voteDto = OtherUserVotes.otherUserVotes(votes, sortedPageable);
+        Page<VoteSummaryDto> voteDto = OtherUserVotes.otherUserVotes(votes, sortedPageable);
 
         // 5. 게시글 수, 팔로워 수, 팔로잉 수 계산
         Long postCount = voteRepository.countByUser_UserId(userId);
-        Long participatedCount = voteSelectRepository.countByUserId(userId);
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
         // 등급 계산
         long avg = calculateAverageParticipantCount(userId);
-        Grade dynamicGrade = Grade.fromAverage(avg);
 
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
