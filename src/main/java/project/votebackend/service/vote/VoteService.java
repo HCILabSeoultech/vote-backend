@@ -1,6 +1,5 @@
 package project.votebackend.service.vote;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,6 @@ import project.votebackend.domain.vote.*;
 import project.votebackend.dto.vote.CreateVoteRequest;
 import project.votebackend.dto.vote.UpdateVoteRequest;
 import project.votebackend.dto.vote.VoteOptionDto;
-import project.votebackend.elasticSearch.VoteDocument;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CategoryException;
 import project.votebackend.exception.VoteException;
@@ -41,7 +39,6 @@ public class VoteService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final VoteOptionRepository voteOptionRepository;
-    private final ElasticsearchClient elasticsearchClient;
     private final VoteImageRepository voteImageRepository;
     private final VoteStat6hRepository voteStat6hRepository;
     private final VoteStatHourlyRepository voteStatHourlyRepository;
@@ -225,17 +222,6 @@ public class VoteService {
         voteStat6hRepository.flush();
 
         voteRepository.delete(vote);
-
-        // Elasticsearch에서도 삭제
-        try {
-            elasticsearchClient.delete(d -> d
-                    .index("votes")
-                    .id(String.valueOf(voteId))
-            );
-        } catch (IOException e) {
-            log.error("Elasticsearch 삭제 실패", e);
-
-        }
     }
 
     // 투표 수정
