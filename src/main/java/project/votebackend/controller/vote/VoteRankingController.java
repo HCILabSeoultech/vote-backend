@@ -29,13 +29,6 @@ public class VoteRankingController {
         return voteRankingService.getVotesSortedByTotalVotes(status, page, size);
     }
 
-//    //오늘 득표순 정렬
-//    @GetMapping("/today")
-//    public List<VoteSummaryDto> getTodayPopularVotes(@RequestParam(defaultValue = "0") int page,
-//                                                     @RequestParam(defaultValue = "20") int size) {
-//        return voteRankingService.getVotesSortedByTodayVotes(page, size);
-//    }
-
     //좋아요순 정렬
     @GetMapping("/likes")
     @Operation(summary = "전체 좋아요순 투표 조회 API", description = "좋아요가 많은 순으로 투표를 조회합니다.")
@@ -55,13 +48,6 @@ public class VoteRankingController {
                                                       @RequestParam(defaultValue = "20") int size) {
         return voteRankingService.getVotesSortedByComments(status, page, size);
     }
-
-//    //급상승 정렬
-//    @GetMapping("/trending")
-//    public List<TrendingVoteDto> getTrendingVotes(@RequestParam(defaultValue = "0") int page,
-//                                                  @RequestParam(defaultValue = "20") int size) {
-//        return voteRankingService.getTrendingVotes(page, size);
-//    }
 
     //급상승 정렬
     @GetMapping("/trending")

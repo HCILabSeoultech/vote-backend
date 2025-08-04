@@ -23,31 +23,11 @@ public class OtherUserVotes {
     private String title;
     private String thumbnailUrl;
 
-    public static Page<OtherUserVotes> otherUserVotes(Page<Vote> votes, Pageable pageable) {
-        List<OtherUserVotes> content = votes.getContent().stream()
-                .map(vote -> OtherUserVotes.builder()
-                        .voteId(vote.getVoteId())
-                        .title(vote.getTitle())
-                        .thumbnailUrl(extractThumbnail(vote))
-                        .build())
+    public static Page<VoteSummaryDto> otherUserVotes(Page<Vote> votes, Pageable pageable) {
+        List<VoteSummaryDto> content = votes.getContent().stream()
+                .map(VoteSummaryDto::from)
                 .toList();
 
         return new PageImpl<>(content, pageable, votes.getTotalElements());
-    }
-
-    private static String extractThumbnail(Vote vote) {
-        Optional<String> imageUrl = vote.getImages().stream()
-                .findFirst()
-                .map(VoteImage::getImageUrl);
-
-        if (imageUrl.isPresent()) {
-            return imageUrl.get();
-        }
-
-        return vote.getOptions().stream()
-                .map(VoteOption::getOptionImage)
-                .filter(img -> img != null && !img.isEmpty())
-                .findFirst()
-                .orElse(null);
     }
 }
