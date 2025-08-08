@@ -8,6 +8,7 @@ import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.dto.vote.VoteSummaryDto;
 import project.votebackend.repository.vote.VoteRepository;
+import project.votebackend.type.VoteStatus;
 import project.votebackend.util.VoteStatisticsUtil;
 
 import java.util.List;
@@ -39,6 +40,14 @@ public class StorageService {
     //내가 작성한 게시물
     public List<VoteSummaryDto> getCreatedPosts(Long userId, Pageable pageable) {
         Page<Vote> votes = voteRepository.findByUser_UserId(userId, pageable);
+        return votes.stream()
+                .map(VoteSummaryDto::from)
+                .toList();
+    }
+
+    //내가 임시저장한 게시물
+    public List<VoteSummaryDto> getDraftPosts(Long userId, Pageable pageable) {
+        Page<Vote> votes = voteRepository.findByUser_UserIdAndStatus(userId, VoteStatus.DRAFT, pageable);
         return votes.stream()
                 .map(VoteSummaryDto::from)
                 .toList();
