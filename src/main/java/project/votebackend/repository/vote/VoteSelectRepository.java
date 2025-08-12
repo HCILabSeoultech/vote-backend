@@ -22,10 +22,6 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     @Query(value = "SELECT option_id FROM vote_selections WHERE vote_id = :voteId AND user_id = :userId", nativeQuery = true)
     Optional<Long> findOptionIdByVoteIdAndUserId(@Param("voteId") Long voteId, @Param("userId") Long userId);
 
-    // 해당 옵션에 대한 투표 수
-    @Query(value = "SELECT COUNT(*) FROM vote_selections WHERE option_id = :optionId", nativeQuery = true)
-    int countByOptionId(@Param("optionId") Long optionId);
-
     // 유저가 참여한 투표 수
     @Query("SELECT COUNT(vs) FROM VoteSelection vs WHERE vs.user.userId = :userId")
     Long countByUserId(@Param("userId") Long userId);

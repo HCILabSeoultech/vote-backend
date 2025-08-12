@@ -17,10 +17,7 @@ import java.util.Optional;
 @Repository
 public interface VoteRepository extends JpaRepository<Vote, Long> {
 
-    //내가 작성한 글
-    Page<Vote> findByUser_UserId(Long userId, Pageable pageable);
-
-    //다른 사용자가 작성한
+    //사용자가 작성한 글 조회
     Page<Vote> findByUser_UserIdAndStatus(Long userId, VoteStatus voteState, Pageable pageable);
 
     //사용자의 게시글 개수
@@ -105,7 +102,6 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     """)
     Page<Vote> findBookmarkedVotes(@Param("userId") Long userId, Pageable pageable);
 
-
     //단일 글
     @Query("SELECT v FROM Vote v " +
             "JOIN FETCH v.user " +
@@ -114,21 +110,6 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             "LEFT JOIN FETCH v.images i " +
             "WHERE v.voteId = :voteId")
     Optional<Vote> findByIdWithUserAndOptions(@Param("voteId") Long voteId);
-
-    //좋아요 상위 글
-    //추후 처리해야할 메서드
-    @Query("""
-        SELECT v
-        FROM Vote v
-        JOIN v.reactions r
-        WHERE r.reaction = :reactionType
-        GROUP BY v
-        ORDER BY COUNT(r) DESC
-    """)
-    List<Vote> findByReactionTypeOrderByLikeCountDesc(
-            @Param("reactionType") ReactionType reactionType,
-            Pageable pageable
-    );
 
     //특정 카테고리의 글 조회
     @Query("""
@@ -140,13 +121,6 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
         ORDER BY COUNT(r) DESC
     """)
     Page<Vote> findByCategoryOrderByLikeCount(@Param("categoryId") Long categoryId, Pageable pageable);
-
-    @Query("""
-        SELECT DISTINCT v
-        FROM Vote v
-        LEFT JOIN FETCH v.selections s
-    """)
-    List<Vote> findAllWithSelections();
 
     //총투표수 기준 정렬
     @Query("""

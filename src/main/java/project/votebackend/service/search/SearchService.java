@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.repository.vote.VoteRepository;
 
-
 @Service
 @RequiredArgsConstructor
 public class SearchService {

@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import project.votebackend.dto.vote.VoteSummaryDto;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.storage.StorageService;
-import project.votebackend.util.PageResponseUtil;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -55,6 +52,7 @@ public class StorageController {
         return storageService.getCreatedPosts(userDetails.getId(), pageable);
     }
 
+    //임시 저장한 게시물 불러오기
     @GetMapping("/drafts")
     @Operation(summary = "임시 저장한 게시물 조회 API", description = "내가 임시 저장한 게시물(DRAFT 상태)을 조회합니다.")
     public List<VoteSummaryDto> getDraftPosts(
