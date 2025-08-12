@@ -50,6 +50,7 @@ public class VoteRankingService {
         return votes.stream().map(VoteSummaryDto::from).toList();
     }
 
+    // 인기 게시글 정렬
     public List<VoteSummaryDto> getTrendingVotes(VoteStatusType status, int page, int size) {
         int offset = page * size;
         List<Vote> votes = voteRepository.findVotesByTrending(status.name(), size, offset);

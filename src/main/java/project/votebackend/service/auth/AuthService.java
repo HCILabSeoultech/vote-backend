@@ -119,12 +119,8 @@ public class AuthService {
         String accessToken = jwtUtil.generateToken(user.getUsername(), user.getUserId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-        log.info("✅ Access Token: {}", accessToken);
-        log.info("✅ Refresh Token: {}", refreshToken);
-
         // 2. Redis에 저장 (key: RT:{userId}, value: refreshToken, TTL: 7일)
         redisTemplate.opsForValue().set("RT:" + user.getUserId(), refreshToken, 7, TimeUnit.DAYS);
-        log.info("✅ Redis 저장 완료 → key: RT:{}, value: {}", user.getUserId(), refreshToken);
 
         // 3. 클라이언트에 RefreshToken을 HttpOnly 쿠키로 전송
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)

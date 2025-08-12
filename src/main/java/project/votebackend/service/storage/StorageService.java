@@ -39,7 +39,7 @@ public class StorageService {
 
     //내가 작성한 게시물
     public List<VoteSummaryDto> getCreatedPosts(Long userId, Pageable pageable) {
-        Page<Vote> votes = voteRepository.findByUser_UserId(userId, pageable);
+        Page<Vote> votes = voteRepository.findByUser_UserIdAndStatus(userId, VoteStatus.PUBLISHED, pageable);
         return votes.stream()
                 .map(VoteSummaryDto::from)
                 .toList();
