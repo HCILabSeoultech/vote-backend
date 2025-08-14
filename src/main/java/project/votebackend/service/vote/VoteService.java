@@ -256,6 +256,13 @@ public class VoteService {
         vote.setVoteType(voteType);
         vote.setFinishTime(request.getFinishTime());
 
+        // 상태값 수정 (type에 따라)
+        if ("UPLOAD".equalsIgnoreCase(request.getType())) {
+            vote.setStatus(VoteStatus.PUBLISHED);
+        } else if ("DRAFT".equalsIgnoreCase(request.getType())) {
+            vote.setStatus(VoteStatus.DRAFT);
+        }
+
         // 기존 옵션에 대한 투표 기록 삭제
         voteSelectRepository.deleteByVote_VoteId(voteId);
 

@@ -15,4 +15,5 @@ public class UpdateVoteRequest {
     private LocalDateTime finishTime;
     private List<VoteOptionDto> options;
     private List<String> imageUrls;
+    private String type;
 }
