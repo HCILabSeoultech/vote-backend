@@ -77,7 +77,7 @@ public class VoteController {
         return ResponseEntity.ok("success");
     }
 
-    // 투표 수정
+    // 투표 수정(임시저장 or 업로드)
     @PatchMapping("/{voteId}")
     @Operation(summary = "투표 수정 API", description = "투표를 수정합니다.")
     public ResponseEntity<?> updateVote(@PathVariable Long voteId,
