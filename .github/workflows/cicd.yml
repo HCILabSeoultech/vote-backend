@@ -39,10 +39,6 @@ jobs:
         run: |
           echo "${{ secrets.CD_APPLICATION }}" > ./src/main/resources/application.yml
 
-      - name: Generate docker-compose.yml
-        run: |
-          echo "${{ secrets.CD_DOCKER }}" > ./docker-compose.yml
-
       - name: Build Project
         run: ./gradlew clean build -x test
 
@@ -79,9 +75,16 @@ jobs:
           EC2_IP=$(cat ec2_public_ip.txt)
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP "mkdir -p ${{ env.REMOTE_DIR }} ${{ env.JAR_REMOTE_DIR }}"
 
-      - name: Generate docker-compose.yml
+      # 👉 .env 파일 생성 (GitHub Secrets → EC2 업로드)
+      - name: Generate .env
         run: |
-          echo "${{ secrets.CD_DOCKER }}" > ./docker-compose.yml
+          cat <<EOF > .env
+          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_REDIS_HOST=${{ secrets.SPRING_REDIS_HOST }}
+          SPRING_REDIS_PORT=${{ secrets.SPRING_REDIS_PORT }}
+          EOF
 
       # 👉 build 잡에서 Secret으로 생성해둔 docker-compose.yml을 서버로 업로드
       - name: Upload docker-compose.yml & Dockerfile
@@ -89,6 +92,7 @@ jobs:
           EC2_IP=$(cat ec2_public_ip.txt)
           scp -o StrictHostKeyChecking=no -i ssh_key.pem ./docker-compose.yml ubuntu@$EC2_IP:${{ env.COMPOSE_FILE_PATH }}
           scp -o StrictHostKeyChecking=no -i ssh_key.pem ./Dockerfile ubuntu@$EC2_IP:${{ env.DOCKERFILE_PATH }}
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem ./.env ubuntu@$EC2_IP:${{ env.REMOTE_DIR }}/.env
 
       - name: Download JAR artifact
         uses: actions/download-artifact@v4

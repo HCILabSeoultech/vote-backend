@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7.2
+    container_name: redis-votey
+    ports:
+      - "6379:6379"
+    networks:
+      - votey-net
+
+  spring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST}
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT}
+    networks:
+      - votey-net
+
+volumes:
+  esdata:
+
+networks:
+  votey-net:
