@@ -47,7 +47,7 @@ jobs:
         run: ./gradlew clean build -x test
 
       - name: Upload docker-compose.yml
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compose-file
           path: ./docker-compose.yml
@@ -63,7 +63,7 @@ jobs:
       JAR_LOCAL_PATH: build/libs/vote-backend-0.0.1-SNAPSHOT.jar
     steps:
       - name: Download docker-compose.yml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: compose-file
           path: .
