@@ -1,0 +1,47 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'develop'
+
+concurrency:
+  group: cicd-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Generate application.yml
+        run: |
+          echo "${{ secrets.CD_APPLICATION }}" > ./src/main/resources/application.yml
+          cat ./src/main/resources/application.yml
+
+      - name: Generate docker-compose.yml
+        run: |
+          echo "${{ secrets.CD_DOCKER }}" > ./docker-compose.yml
+          cat ./docker-compose.yml   
+
+      - name: Build Project
+        run: ./gradlew clean build -x test
+
