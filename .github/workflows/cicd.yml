@@ -110,10 +110,10 @@ jobs:
       - name: docker compose up -d --build on EC2
         run: |
           EC2_IP=$(cat ec2_public_ip.txt)
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP << 'EOF'
-          set -e
-          cd /home/ubuntu/vote-backend
-          echo "🚀 docker compose up -d --build"
-          sudo docker compose -f docker-compose.yml up -d --build
-          EOF 
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP "
+            set -e
+            cd /home/ubuntu/vote-backend
+            echo "🚀 docker compose up -d --build"
+            sudo docker compose -f docker-compose.yml up -d --build
+          " 
 
