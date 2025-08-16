@@ -46,12 +46,6 @@ jobs:
       - name: Build Project
         run: ./gradlew clean build -x test
 
-      - name: Upload docker-compose.yml
-        uses: actions/upload-artifact@v4
-        with:
-          name: compose-file
-          path: ./docker-compose.yml
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -62,11 +56,6 @@ jobs:
       JAR_REMOTE_DIR: /home/ubuntu/vote-backend/build/libs
       JAR_LOCAL_PATH: build/libs/vote-backend-0.0.1-SNAPSHOT.jar
     steps:
-      - name: Download docker-compose.yml
-        uses: actions/download-artifact@v4
-        with:
-          name: compose-file
-          path: .
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -83,6 +72,10 @@ jobs:
         run: |
           EC2_IP=$(cat ec2_public_ip.txt)
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP "mkdir -p ${{ env.REMOTE_DIR }} ${{ env.JAR_REMOTE_DIR }}"
+
+      - name: Generate docker-compose.yml
+        run: |
+          echo "${{ secrets.CD_DOCKER }}" > ./docker-compose.yml
 
       # 👉 build 잡에서 Secret으로 생성해둔 docker-compose.yml을 서버로 업로드
       - name: Upload docker-compose.yml & Dockerfile
