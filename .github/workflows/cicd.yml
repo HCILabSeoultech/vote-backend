@@ -46,3 +46,54 @@ jobs:
       - name: Build Project
         run: ./gradlew clean build -x test
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      REMOTE_DIR: /home/ubuntu/vote-backend
+      COMPOSE_FILE_PATH: /home/ubuntu/vote-backend/docker-compose.yml
+      DOCKERFILE_PATH: /home/ubuntu/vote-backend/Dockerfile
+      JAR_REMOTE_DIR: /home/ubuntu/vote-backend/build/libs
+      JAR_LOCAL_PATH: build/libs/vote-backend-0.0.1-SNAPSHOT.jar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install SSH client
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+      - name: Prepare SSH key & IP
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
+          echo "${{ secrets.EC2_PUBLIC_IP }}" > ec2_public_ip.txt
+          chmod 600 ssh_key.pem
+
+      - name: Create remote dirs
+        run: |
+          EC2_IP=$(cat ec2_public_ip.txt)
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP "mkdir -p ${{ env.REMOTE_DIR }} ${{ env.JAR_REMOTE_DIR }}"
+
+      # 👉 build 잡에서 Secret으로 생성해둔 docker-compose.yml을 서버로 업로드
+      - name: Upload docker-compose.yml & Dockerfile
+        run: |
+          EC2_IP=$(cat ec2_public_ip.txt)
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem ./docker-compose.yml ubuntu@$EC2_IP:${{ env.COMPOSE_FILE_PATH }}
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem ./Dockerfile        ubuntu@$EC2_IP:${{ env.DOCKERFILE_PATH }}
+
+      # 👉 빌드된 JAR도 서버로 전송 (Dockerfile의 COPY 경로에 맞춰 /build/libs/에 둠)
+      - name: Upload built JAR
+        run: |
+          EC2_IP=$(cat ec2_public_ip.txt)
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem "${{ env.JAR_LOCAL_PATH }}" ubuntu@$EC2_IP:${{ env.JAR_REMOTE_DIR }}/
+
+      # 🚀 EC2에서 docker compose 빌드 & 기동
+      - name: docker compose up -d --build on EC2
+        run: |
+          EC2_IP=$(cat ec2_public_ip.txt)
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_IP << 'EOF'
+          set -e
+          cd /home/ubuntu/votey
+          echo "🚀 docker compose up -d --build"
+          sudo docker compose -f docker-compose.yml up -d --build
+          EOF 
+
