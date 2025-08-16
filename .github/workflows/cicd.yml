@@ -46,6 +46,12 @@ jobs:
       - name: Build Project
         run: ./gradlew clean build -x test
 
+      - name: Upload docker-compose.yml
+        uses: actions/upload-artifact@v3
+        with:
+          name: compose-file
+          path: ./docker-compose.yml
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -56,6 +62,11 @@ jobs:
       JAR_REMOTE_DIR: /home/ubuntu/vote-backend/build/libs
       JAR_LOCAL_PATH: build/libs/vote-backend-0.0.1-SNAPSHOT.jar
     steps:
+      - name: Download docker-compose.yml
+        uses: actions/download-artifact@v3
+        with:
+          name: compose-file
+          path: .
       - name: Checkout
         uses: actions/checkout@v3
 
