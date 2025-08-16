@@ -32,6 +32,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Ensure resources dir exists
+        run: mkdir -p src/main/resources
+
       - name: Generate application.yml
         run: |
           echo "${{ secrets.CD_APPLICATION }}" > ./src/main/resources/application.yml
