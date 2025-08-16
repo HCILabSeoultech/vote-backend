@@ -46,6 +46,12 @@ jobs:
       - name: Build Project
         run: ./gradlew clean build -x test
 
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/vote-backend-0.0.1-SNAPSHOT.jar
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -82,7 +88,13 @@ jobs:
         run: |
           EC2_IP=$(cat ec2_public_ip.txt)
           scp -o StrictHostKeyChecking=no -i ssh_key.pem ./docker-compose.yml ubuntu@$EC2_IP:${{ env.COMPOSE_FILE_PATH }}
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem ./Dockerfile        ubuntu@$EC2_IP:${{ env.DOCKERFILE_PATH }}
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem ./Dockerfile ubuntu@$EC2_IP:${{ env.DOCKERFILE_PATH }}
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs
 
       # 👉 빌드된 JAR도 서버로 전송 (Dockerfile의 COPY 경로에 맞춰 /build/libs/에 둠)
       - name: Upload built JAR
