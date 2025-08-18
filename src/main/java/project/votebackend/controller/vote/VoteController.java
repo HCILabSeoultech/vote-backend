@@ -12,6 +12,7 @@ import project.votebackend.dto.vote.CreateVoteResponse;
 import project.votebackend.dto.vote.UpdateVoteRequest;
 import project.votebackend.dto.vote.VoteReuploadRequest;
 import project.votebackend.security.CustumUserDetails;
+import project.votebackend.service.user.UserService;
 import project.votebackend.service.vote.VoteService;
 
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class VoteController {
 
     private final VoteService voteService;
+    private final UserService userService;
 
     // 투표 저장
     @PostMapping("/upload")

@@ -14,6 +14,7 @@ public class CreateVoteRequest {
     private String link;
     private String voteType;
     private LocalDateTime finishTime;
+    private boolean draftHelpVersionSeen;
     private List<VoteOptionDto> options;
     private List<String> imageUrls;
 }

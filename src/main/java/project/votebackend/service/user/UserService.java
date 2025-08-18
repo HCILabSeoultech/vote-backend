@@ -197,4 +197,11 @@ public class UserService {
                 .introduction(user.getIntroduction())
                 .build();
     }
+
+    public boolean getDraftHelpVersionSeen(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        return user.isDraftHelpVersionSeen();
+    }
 }

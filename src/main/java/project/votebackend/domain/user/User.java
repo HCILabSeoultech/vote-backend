@@ -60,6 +60,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private LocalDate birthdate;
 
+    @Column(nullable = false)
+    private boolean draftHelpVersionSeen = false;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserInterest> userInterests = new ArrayList<>();
 }

@@ -106,6 +106,10 @@ public class VoteService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        if(request.isDraftHelpVersionSeen()) {
+            user.setDraftHelpVersionSeen(true);
+        }
+
         VoteType voteType;
         try {
             voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
@@ -296,4 +300,6 @@ public class VoteService {
 
         voteRepository.save(vote);
     }
+
+    //
 }
