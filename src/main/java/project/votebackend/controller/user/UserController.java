@@ -61,4 +61,12 @@ public class UserController {
         UserInfoDto userInfo = userService.getUserInfo(userDetails.getId());
         return ResponseEntity.ok(userInfo);
     }
+
+    //임시저장 설명 다시보기 여부
+    @GetMapping("/getDraftHelpVersionSeen")
+    @Operation(summary = "임시저장 설명 다시보기 여부 조회 API", description = "임시저장시 설명 다시보기 여부를 조회합니다.")
+    public ResponseEntity<Boolean> getDraftHelpVersionSeen(@AuthenticationPrincipal CustumUserDetails userDetails) {
+        boolean draftHelpVersionSeen = userService.getDraftHelpVersionSeen(userDetails.getId());
+        return ResponseEntity.ok(draftHelpVersionSeen);
+    }
 }
