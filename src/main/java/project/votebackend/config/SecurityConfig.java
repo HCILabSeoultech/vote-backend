@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/comment-like/**",  // 댓글 좋아요
                                 "/search/**",        // 검색
                                 "/follow/**",         // 팔로우
-                                "/rank/**"            // 랭킹
+                                "/rank/**",            // 랭킹
+                                "/cluster/**"          // 생성된 뉴스
                         ).authenticated()
 
                         // 그 외 요청은 모두 허용
