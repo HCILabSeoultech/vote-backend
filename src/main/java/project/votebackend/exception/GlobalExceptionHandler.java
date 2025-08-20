@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     }
 
     // ClusterException 예외 처리 - 기사 관련 예외 발생 시 실행됨
-    @ExceptionHandler(FollowException.class)
+    @ExceptionHandler(ClusterException.class)
     public ResponseEntity<ErrorResponse> handleClusterException(ClusterException e) {
         log.error("{}", e.getErrorCode());
 
