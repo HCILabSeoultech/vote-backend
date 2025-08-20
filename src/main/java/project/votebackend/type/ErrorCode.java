@@ -33,7 +33,11 @@ public enum ErrorCode {
     ALREADY_FOLLOW(HttpStatus.CONFLICT, "이미 팔로우 중입니다."),
 
     //Mail
-    CODE_NOT_MATCHED(HttpStatus.CONFLICT, "코드가 일치하지 않습니다.");
+    CODE_NOT_MATCHED(HttpStatus.CONFLICT, "코드가 일치하지 않습니다."),
+
+    //Cluster
+    CLUSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 기사입니다.");
+
 
 
     private final HttpStatus httpStatus;
