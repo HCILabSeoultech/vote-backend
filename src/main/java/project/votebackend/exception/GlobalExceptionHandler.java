@@ -62,6 +62,16 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getErrorCode(), e.getErrorMessage()));
     }
 
+    // ClusterException 예외 처리 - 기사 관련 예외 발생 시 실행됨
+    @ExceptionHandler(FollowException.class)
+    public ResponseEntity<ErrorResponse> handleClusterException(ClusterException e) {
+        log.error("{}", e.getErrorCode());
+
+        return ResponseEntity
+                .status(e.getErrorCode().getHttpStatus())
+                .body(new ErrorResponse(e.getErrorCode(), e.getErrorMessage()));
+    }
+
     // 기타 모든 예외 처리 - 명시되지 않은 예외 발생 시 실행됨
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
