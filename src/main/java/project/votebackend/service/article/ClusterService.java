@@ -66,8 +66,8 @@ public class ClusterService {
     private ClusterSummaryDto toSummary(Cluster c) {
         return new ClusterSummaryDto(
                 c.getId(),
-                c.getTitle(),
                 c.getImageUrl(),
+                c.getTitle(),
                 c.getCreatedAt()
         );
     }

@@ -25,7 +25,6 @@ public class ClusterController {
     // 뉴스 목록 조회
     @GetMapping
     @Operation(summary = "뉴스 목록 조회 API", description = "생성된 뉴스들을 조회합니다.")
-
     public ResponseEntity<Map<String, Object>> loadMainPageClusters(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
