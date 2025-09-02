@@ -11,6 +11,7 @@ import project.votebackend.dto.article.ClusterDetailDto;
 import project.votebackend.dto.article.ClusterSummaryDto;
 import project.votebackend.exception.ClusterException;
 import project.votebackend.repository.article.ClusterRepository;
+import project.votebackend.repository.news.NewsBookmarkRepository;
 import project.votebackend.type.ErrorCode;
 
 import java.util.Comparator;
@@ -21,6 +22,7 @@ import java.util.List;
 public class ClusterService {
 
     private final ClusterRepository clusterRepository;
+    private final NewsBookmarkRepository newsBookmarkRepository;
 
     // 뉴스 조회
     public Page<ClusterSummaryDto> getMainPageClusters(Pageable pageable) {
@@ -29,7 +31,7 @@ public class ClusterService {
     }
 
     // 뉴스 상세 조회
-    public ClusterDetailDto getClusterDetail(Long clusterId) {
+    public ClusterDetailDto getClusterDetail(Long clusterId, Long userId) {
         Cluster c = clusterRepository.findById(clusterId)
                 .orElseThrow(() -> new ClusterException(ErrorCode.CLUSTER_NOT_FOUND));
 
@@ -46,6 +48,8 @@ public class ClusterService {
                 ))
                 .toList();
 
+        boolean isBookmarked = newsBookmarkRepository.existsByUser_UserIdAndCluster_Id(userId, clusterId);
+
         return new ClusterDetailDto(
                 c.getId(),
                 c.getImageUrl(),
@@ -59,7 +63,8 @@ public class ClusterService {
                 c.getContent2(),
                 c.getContent3(),
                 c.getContent4(),
-                articles
+                articles,
+                isBookmarked
         );
     }
 
