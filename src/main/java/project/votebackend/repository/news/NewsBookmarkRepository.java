@@ -11,4 +11,6 @@ import java.util.Optional;
 @Repository
 public interface NewsBookmarkRepository extends JpaRepository<NewsBookmark, Long> {
     Optional<NewsBookmark> findByUserAndCluster(User user, Cluster cluster);
+
+    boolean existsByUser_UserIdAndCluster_Id(Long userId, Long clusterId);
 }

@@ -7,9 +7,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.dto.article.ClusterDetailDto;
 import project.votebackend.dto.article.ClusterSummaryDto;
+import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.article.ClusterService;
 import project.votebackend.util.PageResponseUtil;
 
@@ -37,8 +39,11 @@ public class ClusterController {
     // 상세 조회
     @GetMapping("/{clusterId}")
     @Operation(summary = "뉴스 상세 조회 API", description = "뉴스를 상세조회 합니다.")
-    public ResponseEntity<ClusterDetailDto> getClusterDetail(@PathVariable Long clusterId) {
-        return ResponseEntity.ok(clusterService.getClusterDetail(clusterId));
+    public ResponseEntity<ClusterDetailDto> getClusterDetail(
+            @PathVariable Long clusterId,
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(clusterService.getClusterDetail(clusterId, userDetails.getId()));
     }
 
 }

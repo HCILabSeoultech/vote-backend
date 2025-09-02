@@ -26,4 +26,5 @@ public class ClusterDetailDto {
 
     // 출처 기사
     private List<ArticleItemDto> articles;
+    private boolean isBookmarked;
 }
