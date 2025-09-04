@@ -5,11 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import project.votebackend.dto.article.ClusterSummaryDto;
 import project.votebackend.dto.vote.VoteSearchResponse;
+import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.search.SearchService;
 
 @RestController
@@ -27,5 +27,16 @@ public class SearchController {
             @PageableDefault(size = 20, page = 0) Pageable pageable
     ) {
         return searchService.searchVotes(keyword, pageable);
+    }
+
+    //뉴스 검색
+    @GetMapping("/news")
+    @Operation(summary = "뉴스 검색 API", description = "뉴스를 제목으로 검색합니다.")
+    public Page<ClusterSummaryDto> searchNews(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @AuthenticationPrincipal CustumUserDetails userDetails
+            ) {
+        return searchService.searchNews(keyword, pageable, userDetails.getId());
     }
 }
