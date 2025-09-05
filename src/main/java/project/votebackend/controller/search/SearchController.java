@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.dto.article.ClusterSummaryDto;
@@ -38,5 +39,26 @@ public class SearchController {
             @AuthenticationPrincipal CustumUserDetails userDetails
             ) {
         return searchService.searchNews(keyword, pageable, userDetails.getId());
+    }
+
+    // 검색어 단일 삭제
+    @DeleteMapping("/{searchId}")
+    @Operation(summary = "검색어 단일 삭제", description = "특정 검색어 기록을 삭제합니다.")
+    public ResponseEntity<Void> deleteOne(
+            @PathVariable Long searchId,
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        searchService.deleteOne(userDetails.getId(), searchId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 검색어 전체 삭제
+    @DeleteMapping
+    @Operation(summary = "검색어 전체 삭제", description = "해당 사용자의 모든 검색 기록을 삭제합니다.")
+    public ResponseEntity<Void> deleteAll(
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        searchService.deleteAll(userDetails.getId());
+        return ResponseEntity.noContent().build();
     }
 }

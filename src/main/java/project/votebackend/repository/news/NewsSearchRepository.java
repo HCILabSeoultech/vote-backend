@@ -6,4 +6,6 @@ import project.votebackend.domain.search.NewsSearch;
 
 @Repository
 public interface NewsSearchRepository extends JpaRepository<NewsSearch, Long> {
+    void deleteBySearchIdAndUser_UserId(Long searchId, Long userId);
+    void deleteByUser_UserId(Long userId);
 }

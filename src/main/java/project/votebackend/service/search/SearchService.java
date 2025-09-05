@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.search.NewsSearch;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.article.ClusterSummaryDto;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.exception.AuthException;
+import project.votebackend.exception.ClusterException;
 import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.repository.news.NewsSearchRepository;
 import project.votebackend.repository.user.UserRepository;
@@ -54,5 +56,24 @@ public class SearchService {
                 (String) row[2],                               // title
                 ((java.sql.Timestamp) row[3]).toLocalDateTime()// created_at → createdAt
         ));
+    }
+
+    @Transactional
+    public void deleteOne(Long userId, Long searchId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        NewsSearch newsSearch = newsSearchRepository.findById(searchId)
+                        .orElseThrow(() -> new ClusterException(ErrorCode.SEARCH_NOT_FOUND));
+
+        newsSearchRepository.deleteBySearchIdAndUser_UserId(searchId, userId);
+    }
+
+    @Transactional
+    public void deleteAll(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
+
+        newsSearchRepository.deleteByUser_UserId(userId);
     }
 }

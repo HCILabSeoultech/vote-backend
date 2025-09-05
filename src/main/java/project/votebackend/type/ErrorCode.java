@@ -36,7 +36,10 @@ public enum ErrorCode {
     CODE_NOT_MATCHED(HttpStatus.CONFLICT, "코드가 일치하지 않습니다."),
 
     //Cluster
-    CLUSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 기사입니다.");
+    CLUSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 기사입니다."),
+
+    //News
+    SEARCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 검색어입니다.");
 
 
 
