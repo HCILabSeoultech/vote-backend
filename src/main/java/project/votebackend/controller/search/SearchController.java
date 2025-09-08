@@ -9,9 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import project.votebackend.dto.article.ClusterSummaryDto;
+import project.votebackend.dto.search.SearchDto;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.search.SearchService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,5 +63,15 @@ public class SearchController {
     ) {
         searchService.deleteAll(userDetails.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    // 검색어 전체조회
+    @GetMapping
+    @Operation(summary = "검색어 조회", description = "검색어를 최신순으로 조회합니다.")
+    public ResponseEntity<List<SearchDto>> getSearch(
+            @AuthenticationPrincipal CustumUserDetails userDetails
+    ) {
+        List<SearchDto> searches = searchService.getSearchList(userDetails.getId());
+        return ResponseEntity.ok(searches);
     }
 }

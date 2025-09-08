@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.search.NewsSearch;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.article.ClusterSummaryDto;
+import project.votebackend.dto.search.SearchDto;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.ClusterException;
@@ -16,6 +17,8 @@ import project.votebackend.repository.news.NewsSearchRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.type.ErrorCode;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -75,5 +78,12 @@ public class SearchService {
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         newsSearchRepository.deleteByUser_UserId(userId);
+    }
+
+    public List<SearchDto> getSearchList(Long userId) {
+        return newsSearchRepository.findByUser_UserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(SearchDto::fromEntity)
+                .toList();
     }
 }
