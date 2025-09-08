@@ -3,6 +3,7 @@ package project.votebackend.domain.search;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.votebackend.domain.BaseEntity;
 import project.votebackend.domain.user.User;
@@ -12,6 +13,7 @@ import project.votebackend.domain.user.User;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class NewsSearch extends BaseEntity {
 
     @Id
