@@ -13,6 +13,7 @@ import project.votebackend.dto.article.ClusterDetailDto;
 import project.votebackend.dto.article.ClusterSummaryDto;
 import project.votebackend.security.CustumUserDetails;
 import project.votebackend.service.article.ClusterService;
+import project.votebackend.type.Category;
 import project.votebackend.util.PageResponseUtil;
 
 import java.util.Map;
@@ -26,13 +27,14 @@ public class ClusterController {
 
     // 뉴스 목록 조회
     @GetMapping
-    @Operation(summary = "뉴스 목록 조회 API", description = "생성된 뉴스들을 조회합니다.")
-    public ResponseEntity<Map<String, Object>> loadMainPageClusters(
+    @Operation(summary = "뉴스 목록 조회 API", description = "생성된 뉴스들을 조회합니다. category 파라미터로 카테고리별 조회를 지원합니다.")
+    public ResponseEntity<Map<String, Object>> loadNews(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Category category
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<ClusterSummaryDto> clusterPage = clusterService.getMainPageClusters(pageable);
+        Page<ClusterSummaryDto> clusterPage = clusterService.getClusters(pageable, category);
         return ResponseEntity.ok(PageResponseUtil.toResponse(clusterPage));
     }
 
@@ -45,5 +47,4 @@ public class ClusterController {
     ) {
         return ResponseEntity.ok(clusterService.getClusterDetail(clusterId, userDetails.getId()));
     }
-
 }
