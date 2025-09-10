@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import project.votebackend.domain.BaseEntity;
+import project.votebackend.type.Category;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ public class Cluster extends BaseEntity {
 
     @Column
     private String sourceOriginalArticleUrl;
+
+    @Enumerated(EnumType.STRING)
+    private Category category;
 
     @Column
     private String title;
