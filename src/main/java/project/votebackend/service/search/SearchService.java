@@ -16,6 +16,7 @@ import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.repository.news.NewsSearchRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteRepository;
+import project.votebackend.type.Category;
 import project.votebackend.type.ErrorCode;
 
 import java.util.List;
@@ -57,7 +58,8 @@ public class SearchService {
                 ((Number) row[0]).longValue(),                 // cluster_id → id
                 (String) row[1],                               // image_url → imageUrl
                 (String) row[2],                               // title
-                ((java.sql.Timestamp) row[3]).toLocalDateTime()// created_at → createdAt
+                ((java.sql.Timestamp) row[3]).toLocalDateTime(),// created_at → createdAt
+                Category.valueOf((String) row[4])
         ));
     }
 
