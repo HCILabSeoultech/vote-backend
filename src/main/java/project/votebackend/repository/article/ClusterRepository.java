@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import project.votebackend.domain.article.Cluster;
+import project.votebackend.type.Category;
 
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
 public interface ClusterRepository extends JpaRepository<Cluster, Long> {
 
     Optional<Cluster> findByTitle(String title);
+    Page<Cluster> findByCategory(Category category, Pageable pageable);
 
     @Query(value = """
     SELECT 

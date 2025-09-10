@@ -2,6 +2,7 @@ package project.votebackend.dto.article;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import project.votebackend.type.Category;
 
 import java.time.LocalDateTime;
 
@@ -12,4 +13,5 @@ public class ClusterSummaryDto {
     private String imageUrl;
     private String title;
     private LocalDateTime createdAt;
+    private Category category;
 }

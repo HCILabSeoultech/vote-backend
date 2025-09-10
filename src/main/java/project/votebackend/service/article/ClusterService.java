@@ -12,6 +12,7 @@ import project.votebackend.dto.article.ClusterSummaryDto;
 import project.votebackend.exception.ClusterException;
 import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.repository.news.NewsBookmarkRepository;
+import project.votebackend.type.Category;
 import project.votebackend.type.ErrorCode;
 
 import java.util.Comparator;
@@ -25,9 +26,11 @@ public class ClusterService {
     private final NewsBookmarkRepository newsBookmarkRepository;
 
     // 뉴스 조회
-    public Page<ClusterSummaryDto> getMainPageClusters(Pageable pageable) {
-        return clusterRepository.findAll(pageable)
-                .map(this::toSummary);
+    public Page<ClusterSummaryDto> getClusters(Pageable pageable, Category category) {
+        Page<Cluster> page = (category == null)
+                ? clusterRepository.findAll(pageable)
+                : clusterRepository.findByCategory(category, pageable);
+        return page.map(this::toSummary);
     }
 
     // 뉴스 상세 조회
@@ -73,7 +76,8 @@ public class ClusterService {
                 c.getId(),
                 c.getImageUrl(),
                 c.getTitle(),
-                c.getCreatedAt()
+                c.getCreatedAt(),
+                c.getCategory()
         );
     }
 }
