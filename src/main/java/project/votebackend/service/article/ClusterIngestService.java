@@ -19,6 +19,7 @@ import project.votebackend.dto.article.IngestClusterNode;
 import project.votebackend.dto.article.IngestPayload;
 import project.votebackend.repository.article.ArticleRepository;
 import project.votebackend.repository.article.ClusterRepository;
+import project.votebackend.type.Category;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -41,12 +42,12 @@ public class ClusterIngestService {
     @Value("${fastapi.secret}")
     private String secret;
 
-    public void ingestFromUrl(String sourceUrl) {
+    public void ingestFromUrl(String sourceUrl, Category category) {
         // 외부 API 호출 → Json을 자가 객체로 역직렬화
         IngestPayload payload = fetchPayloadWithHeaders(sourceUrl);
 
         if (payload != null) {
-            ingest(payload);
+            ingest(payload, category);
         }
     }
 
@@ -100,15 +101,16 @@ public class ClusterIngestService {
 
     // 역직렬화 한 데이터를 DB에 저장
     @Transactional
-    public void ingest(IngestPayload payload) {
-        payload.getClusters().forEach((key, node) -> upsertOneCluster(node));
+    public void ingest(IngestPayload payload, Category category) {
+        payload.getClusters().forEach((key, node) -> upsertOneCluster(node, category));
     }
 
-    private void upsertOneCluster(IngestClusterNode node) {
+    private void upsertOneCluster(IngestClusterNode node, Category category) {
         Cluster cluster = clusterRepository.findByTitle(node.getTitle())
                 .orElseGet(Cluster::new);
 
         mapper.fillClusterFromNode(cluster, node);
+        cluster.setCategory(category);
         Cluster saved = clusterRepository.save(cluster);
 
         if (node.getArticles() != null) {
