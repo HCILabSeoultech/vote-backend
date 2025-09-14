@@ -50,6 +50,9 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.20.30'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
+    implementation "com.google.auth:google-auth-library-oauth2-http:1.23.0"
 }
 
 tasks.named('test') {
