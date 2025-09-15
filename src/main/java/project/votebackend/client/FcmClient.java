@@ -7,6 +7,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import project.votebackend.dto.fcm.FcmSendRequest;
+import project.votebackend.dto.fcm.FcmSendResponse;
 import reactor.core.publisher.Mono;
 
 @Slf4j
