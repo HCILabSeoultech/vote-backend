@@ -1,6 +1,7 @@
 package project.votebackend.service.comment;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,7 @@ import project.votebackend.domain.comment.Comment;
 import project.votebackend.domain.user.User;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.comment.CommentResponse;
+import project.votebackend.dto.notification.CommentCreatedEvent;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.CommentException;
 import project.votebackend.exception.VoteException;
@@ -26,6 +28,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 댓글 작성
     @Transactional
@@ -40,14 +43,31 @@ public class CommentService {
         comment.setVote(vote);
         comment.setContent(content);
 
+        Comment parent = null;
+        Long parentAuthorId = null;
         if (parentId != null) {
-            Comment parent = commentRepository.findById(parentId)
+            parent = commentRepository.findById(parentId)
                     .orElseThrow(() -> new CommentException(ErrorCode.PARENT_COMMENT_NOT_FOUND));
             comment.setParent(parent);
+            parentAuthorId = parent.getUser().getUserId();
         }
 
-        commentRepository.save(comment);
-        return CommentResponse.fromEntity(comment, user.getUserId());
+        Comment saved = commentRepository.save(comment);
+
+        // 커밋 이후 푸시를 보내도록 이벤트 발행
+        Long postAuthorId = vote.getUser().getUserId();
+        eventPublisher.publishEvent(
+                new CommentCreatedEvent(
+                        voteId,
+                        saved.getCommentId(),
+                        user.getUserId(),
+                        postAuthorId,
+                        parentId,
+                        parentAuthorId
+                )
+        );
+
+        return CommentResponse.fromEntity(saved, user.getUserId());
     }
 
     // 댓글 조회
