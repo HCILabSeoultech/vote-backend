@@ -33,11 +33,17 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Ensure resources dir exists
-        run: mkdir -p src/main/resources
+        run: |
+          mkdir -p src/main/resources
+          mkdir -p src/main/resources/firebase
 
       - name: Generate application.yml
         run: |
           echo "${{ secrets.CD_APPLICATION }}" > ./src/main/resources/application.yml
+
+      - name: Write firebase service account key
+        run: |
+          echo "${{ secrets.FCM_KEY_JSON }}" > ./src/main/resources/firebase/firebase-key.json
 
       - name: Build Project
         run: ./gradlew clean build -x test

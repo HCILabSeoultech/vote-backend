@@ -15,6 +15,8 @@ public enum ErrorCode {
     USERNAME_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 아이디입니다."),
     PASSWORD_NOT_MATCHED(HttpStatus.CONFLICT, "비밀번호가 일치하지 않습니다."),
     USER_NOT_MATCHED(HttpStatus.CONFLICT, "유저가 일치하지 않습니다."),
+    GOOGLE_CREDENTIAL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "GoogleCredentials 초기화에 실패했습니다."),
+    ACCESS_TOKEN_GET_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Google 토큰 생성에 실패했습니다."),
 
     //Category
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다."),
@@ -39,7 +41,10 @@ public enum ErrorCode {
     CLUSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 기사입니다."),
 
     //News
-    SEARCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 검색어입니다.");
+    SEARCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 검색어입니다."),
+
+    //Notification
+    NOTIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "알림 전송에 실패했습니다.");
 
 
 

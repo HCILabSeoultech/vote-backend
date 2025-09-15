@@ -1,6 +1,7 @@
 HELP.md
 .gradle
 application.yml
+firebase
 
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -38,3 +39,4 @@ out/
 ### VS Code ###
 .vscode/
 .env
+
