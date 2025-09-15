@@ -3,6 +3,8 @@ package project.votebackend.client;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import project.votebackend.exception.AuthException;
+import project.votebackend.type.ErrorCode;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,7 +32,7 @@ public class GoogleAccessTokenProvider {
                 }
             }
         } catch (IOException e) {
-            throw new IllegalStateException("GoogleCredentials 초기화 실패", e);
+            throw new AuthException(ErrorCode.GOOGLE_CREDENTIAL_FAILED);
         }
     }
 
@@ -39,7 +41,7 @@ public class GoogleAccessTokenProvider {
             credentials.refreshIfExpired();
             return credentials.getAccessToken().getTokenValue();
         } catch (IOException e) {
-            throw new IllegalStateException("Google AccessToken 갱신 실패", e);
+            throw new AuthException(ErrorCode.GOOGLE_CREDENTIAL_FAILED);
         }
     }
 }

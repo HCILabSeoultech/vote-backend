@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import project.votebackend.dto.fcm.FcmSendRequest;
 import project.votebackend.dto.fcm.FcmSendResponse;
+import project.votebackend.exception.FcmException;
+import project.votebackend.type.ErrorCode;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -37,7 +39,7 @@ public class FcmClient {
                 .bodyToMono(FcmSendResponse.class)
                 .onErrorResume(e -> {
                     log.error("FCM 전송 실패: {}", e.getMessage(), e);
-                    return Mono.error(new IllegalStateException("FCM 전송 실패", e));
+                    return Mono.error(new FcmException(ErrorCode.NOTIFICATION_FAILED));
                 })
                 .block();
     }
