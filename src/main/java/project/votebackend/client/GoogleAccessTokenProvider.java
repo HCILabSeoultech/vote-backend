@@ -2,6 +2,7 @@ package project.votebackend.client;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import project.votebackend.exception.AuthException;
 import project.votebackend.type.ErrorCode;
@@ -19,19 +20,11 @@ public class GoogleAccessTokenProvider {
 
     private final GoogleCredentials credentials;
 
-    public GoogleAccessTokenProvider(@Value("${fcm.key-path}") String keyPath) {
-        try {
-            if (keyPath.startsWith("classpath:")) {
-                String path = keyPath.replace("classpath:", "");
-                try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-                    this.credentials = GoogleCredentials.fromStream(is).createScoped(SCOPES);
-                }
-            } else {
-                try (FileInputStream fis = new FileInputStream(keyPath)) {
-                    this.credentials = GoogleCredentials.fromStream(fis).createScoped(SCOPES);
-                }
-            }
-        } catch (IOException e) {
+    public GoogleAccessTokenProvider(@Value("${fcm.key-path}") Resource keyResource) {
+        try (InputStream in = keyResource.getInputStream()) {
+            this.credentials = GoogleCredentials.fromStream(in)
+                    .createScoped(SCOPES);
+        } catch (Exception e) {
             throw new AuthException(ErrorCode.GOOGLE_CREDENTIAL_FAILED);
         }
     }
