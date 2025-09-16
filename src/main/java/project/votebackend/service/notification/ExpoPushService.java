@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import project.votebackend.client.ExpoPushClient;
 import project.votebackend.dto.notification.ExpoPushMessage;
-import project.votebackend.dto.notification.ExpoPushRequest;
-import project.votebackend.dto.notification.ExpoPushResponse;
 
-import java.util.Arrays;
 import java.util.Map;
 
 @Service
@@ -40,16 +37,13 @@ public class ExpoPushService {
                 .data(data)
                 .sound("default")
                 .priority("high")
-                .ttl(3600) // 1시간 후 만료
-                .build();
-
-        ExpoPushRequest request = ExpoPushRequest.builder()
-                .messages(Arrays.asList(message))
+                .ttl(3600)
                 .build();
 
         try {
-            ExpoPushResponse response = expoPushClient.send(request);
-            log.info("[EXPO-SEND] 성공: token={}, response={}", maskedToken, response);
+            String raw = expoPushClient.send(java.util.List.of(message));
+            log.info("[EXPO-SEND] 성공: token={}, raw={}", maskedToken, raw);
+            // 원한다면 raw 파싱해서 data[0].status == "error" 체크
         } catch (Exception ex) {
             log.error("[EXPO-SEND] 실패: token={}, msg={}", maskedToken, ex.getMessage(), ex);
             throw ex;
