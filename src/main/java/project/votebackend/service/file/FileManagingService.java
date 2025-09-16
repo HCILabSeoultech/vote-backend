@@ -1,6 +1,7 @@
 package project.votebackend.service.file;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class FileManagingService {
 
@@ -105,17 +107,19 @@ public class FileManagingService {
         }
     }
 
-    // 비디오 저장
     public String storeVideo(MultipartFile file) {
         try {
-            // 50MB 초과 제한
             if (file.getSize() > 50 * 1024 * 1024) {
+                log.warn("[VIDEO-STORE] 업로드 파일 용량 초과: {}MB",
+                        String.format("%.2f", file.getSize() / 1024.0 / 1024.0));
                 throw new IllegalArgumentException("50MB를 초과한 파일은 업로드할 수 없습니다.");
             }
 
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             String videoKey = "videos/" + fileName;
             String thumbnailKey = "thumbnails/" + fileName.replaceAll("\\..+$", ".jpg");
+
+            log.info("[VIDEO-STORE] 영상 업로드 시작: key={}", videoKey);
 
             // S3에 영상 업로드
             PutObjectRequest videoRequest = PutObjectRequest.builder()
@@ -125,25 +129,27 @@ public class FileManagingService {
                     .build();
 
             s3Client.putObject(videoRequest, RequestBody.fromBytes(file.getBytes()));
+            log.info("[VIDEO-STORE] 영상 업로드 완료: key={}", videoKey);
 
-            // 썸네일 생성 (ffmpeg로 0초 프레임 추출)
+            // 썸네일 생성
             File tempVideoFile = File.createTempFile("temp_video", null);
             file.transferTo(tempVideoFile);
-
             File thumbnailFile = File.createTempFile("temp_thumbnail", ".jpg");
-            extractThumbnail(tempVideoFile, thumbnailFile);
 
-            // 썸네일 압축 & 리사이즈 (1080x1080, JPEG, 품질 50%)
+            log.info("[VIDEO-STORE] 썸네일 추출 시작: {}", tempVideoFile.getAbsolutePath());
+            extractThumbnail(tempVideoFile, thumbnailFile);
+            log.info("[VIDEO-STORE] 썸네일 추출 완료: {}", thumbnailFile.getAbsolutePath());
+
+            // 썸네일 압축/리사이즈
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Thumbnails.of(thumbnailFile)
                     .size(1080, 1080)
                     .outputFormat("jpg")
                     .outputQuality(0.5)
                     .toOutputStream(os);
-
             byte[] resizedThumbnail = os.toByteArray();
 
-            // S3에 썸네일 업로드
+            // 썸네일 업로드
             PutObjectRequest thumbRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(thumbnailKey)
@@ -151,42 +157,47 @@ public class FileManagingService {
                     .build();
 
             s3Client.putObject(thumbRequest, RequestBody.fromBytes(resizedThumbnail));
+            log.info("[VIDEO-STORE] 썸네일 업로드 완료: key={}", thumbnailKey);
 
             // 임시 파일 삭제
             tempVideoFile.delete();
             thumbnailFile.delete();
 
-            // 최종 URL 반환 (CloudFront)
-            return "https://" + cloudFrontDomain + "/" + videoKey;
+            String url = "https://" + cloudFrontDomain + "/" + videoKey;
+            log.info("[VIDEO-STORE] 최종 URL 반환: {}", url);
+
+            return url;
 
         } catch (IOException | InterruptedException e) {
+            log.error("[VIDEO-STORE] 업로드 실패: {}", e.getMessage(), e);
             throw new RuntimeException("영상 업로드 실패", e);
         }
     }
 
-    // 썸네일 추출 (ffmpeg 이용)
     private void extractThumbnail(File videoFile, File thumbnailFile) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(
                 "ffmpeg", "-y",
                 "-i", videoFile.getAbsolutePath(),
-                "-ss", "00:00:00",  // 0초 지점
+                "-ss", "00:00:00",
                 "-vframes", "1",
                 "-vf", "scale=640:-1",
                 thumbnailFile.getAbsolutePath()
         );
-
         Process process = pb.start();
         int exitCode = process.waitFor();
         if (exitCode != 0) {
+            log.error("[VIDEO-THUMBNAIL] ffmpeg 실패 exitCode={}", exitCode);
             throw new RuntimeException("썸네일 추출 실패");
         }
     }
 
-    // 영상 및 썸네일 삭제
     public void deleteVideo(String fileUrl) {
         try {
             String key = fileUrl.substring(fileUrl.indexOf("videos/"));
             String thumbnailKey = key.replace("videos/", "thumbnails/").replaceAll("\\..+$", ".jpg");
+
+            log.info("[VIDEO-DELETE] 영상 삭제 시작: key={}", key);
+            log.info("[VIDEO-DELETE] 썸네일 삭제 시작: key={}", thumbnailKey);
 
             DeleteObjectRequest deleteVideo = DeleteObjectRequest.builder()
                     .bucket(bucketName)
@@ -199,7 +210,10 @@ public class FileManagingService {
 
             s3Client.deleteObject(deleteVideo);
             s3Client.deleteObject(deleteThumb);
+
+            log.info("[VIDEO-DELETE] 삭제 완료: key={}, thumbnailKey={}", key, thumbnailKey);
         } catch (Exception e) {
+            log.error("[VIDEO-DELETE] 삭제 실패: {}", e.getMessage(), e);
             throw new RuntimeException("영상 삭제 실패", e);
         }
     }
