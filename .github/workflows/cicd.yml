@@ -46,12 +46,8 @@ jobs:
           mkdir -p ./src/main/resources/firebase
           echo "${{ secrets.FCM_KEY_JSON }}" | base64 -d > ./src/main/resources/firebase/firebase-key.json
           # 파일 자체 검증 (깨지면 여기서 fail)
-          python3 - <<'PY'
-          import json,sys
-          p="src/main/resources/firebase/firebase-key.json"
-          json.load(open(p))
-          print("JSON OK:", p)
-          PY
+          python3 -c "import json; json.load(open('src/main/resources/firebase/firebase-key.json')); print('JSON OK')"
+
 
       - name: Build Project
         run: ./gradlew clean build -x test
@@ -60,11 +56,8 @@ jobs:
         run: |
           jar tf build/libs/vote-backend-0.0.1-SNAPSHOT.jar | grep -E 'firebase-key\.json|firebase/' || (echo "Key not packaged"; exit 1)
           jar xf build/libs/vote-backend-0.0.1-SNAPSHOT.jar BOOT-INF/classes/firebase/firebase-key.json
-          python3 - <<'PY'
-          import json
-          json.load(open('BOOT-INF/classes/firebase/firebase-key.json'))
-          print('JAR JSON OK')
-          PY  
+          python3 -c "import json; json.load(open('BOOT-INF/classes/firebase/firebase-key.json')); print('JAR JSON OK')"
+
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
