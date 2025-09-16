@@ -1,6 +1,7 @@
 package project.votebackend.client;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.util.List;
 
 @Component
+@Slf4j
 public class GoogleAccessTokenProvider {
 
     private static final List<String> SCOPES =
@@ -22,9 +24,12 @@ public class GoogleAccessTokenProvider {
 
     public GoogleAccessTokenProvider(@Value("${fcm.key-path}") Resource keyResource) {
         try (InputStream in = keyResource.getInputStream()) {
+            log.info("[FCM] keyResource location: {}", keyResource);
             this.credentials = GoogleCredentials.fromStream(in)
                     .createScoped(SCOPES);
+            log.info("[FCM] GoogleCredentials loaded successfully");
         } catch (Exception e) {
+            log.error("[FCM] Failed to load credentials from resource: {}", keyResource, e);
             throw new AuthException(ErrorCode.GOOGLE_CREDENTIAL_FAILED);
         }
     }
