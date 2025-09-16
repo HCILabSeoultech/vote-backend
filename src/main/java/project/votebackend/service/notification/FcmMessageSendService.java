@@ -1,12 +1,14 @@
 package project.votebackend.service.notification;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import project.votebackend.client.FcmClient;
 import project.votebackend.dto.fcm.*;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FcmMessageSendService {
@@ -15,6 +17,12 @@ public class FcmMessageSendService {
 
     public void sendBackgroundAlert(String fcmToken, String title, String body,
                                     Map<String, String> dataOpt) {
+        String maskedToken = fcmToken != null && fcmToken.length() > 10
+                ? fcmToken.substring(0, 10) + "..."
+                : fcmToken;
+
+        log.info("[FCM-SEND] 시작: token={}, title='{}', body='{}', data={}",
+                maskedToken, title, body, dataOpt);
 
         // Android 영역
         FcmAndroidNotification androidNotification = FcmAndroidNotification.builder()
@@ -30,9 +38,6 @@ public class FcmMessageSendService {
         // iOS(APNs) 영역
         FcmAps aps = FcmAps.builder()
                 .badge(1)
-                // .contentAvailable(1)   // 백그라운드 데이터 처리 시 활성화
-                // .mutableContent(1)     // Notification Service Extension 사용 시
-                // .category("OPEN_APP")  // iOS에서 카테고리 분기 시
                 .build();
 
         FcmApns apns = FcmApns.builder()
@@ -57,6 +62,12 @@ public class FcmMessageSendService {
                 .apns(apns)
                 .build();
 
-        fcmClient.send(FcmSendRequest.builder().message(msg).build());
+        try {
+            var resp = fcmClient.send(FcmSendRequest.builder().message(msg).build());
+            log.info("[FCM-SEND] 성공: token={}, response={}", maskedToken, resp);
+        } catch (Exception ex) {
+            log.error("[FCM-SEND] 실패: token={}, msg={}", maskedToken, ex.getMessage(), ex);
+            throw ex; // 필요하다면 여기서 예외를 다시 던지거나 무시할 수 있음
+        }
     }
 }

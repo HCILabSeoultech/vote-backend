@@ -37,6 +37,7 @@ public class FcmClient {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(FcmSendResponse.class)
+                .doOnNext(resp -> log.info("FCM 전송 성공: {}", resp))
                 .onErrorResume(e -> {
                     log.error("FCM 전송 실패: {}", e.getMessage(), e);
                     return Mono.error(new FcmException(ErrorCode.NOTIFICATION_FAILED));

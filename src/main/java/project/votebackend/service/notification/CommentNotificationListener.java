@@ -24,6 +24,9 @@ public class CommentNotificationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentCreated(CommentCreatedEvent e) {
+        log.info("[ALERT] CommentCreatedEvent 수신: voteId={}, commentId={}, commenterId={}, postAuthorId={}, parentAuthorId={}",
+                e.getVoteId(), e.getCommentId(), e.getCommenterId(), e.getPostAuthorId(), e.getParentAuthorId());
+
         // 자기 자신 대상은 제외하고 중복 제거
         Set<Long> targets = new HashSet<>();
         if (!e.getCommenterId().equals(e.getPostAuthorId())) {
@@ -32,7 +35,10 @@ public class CommentNotificationListener {
         if (e.getParentAuthorId() != null && !e.getCommenterId().equals(e.getParentAuthorId())) {
             targets.add(e.getParentAuthorId()); // 부모 댓글 작성자(대댓글)
         }
-        if (targets.isEmpty()) return;
+        if (targets.isEmpty()) {
+            log.info("[ALERT] 알림 대상 없음 (자기 자신만 댓글)");
+            return;
+        }
 
         String nickname = userRepository.findById(e.getCommenterId())
                 .map(u -> Optional.ofNullable(u.getName()).orElse(u.getUsername()))
@@ -50,16 +56,23 @@ public class CommentNotificationListener {
             data.put("type", isReplyTarget ? "REPLY" : "COMMENT");
             data.put("voteId", String.valueOf(e.getVoteId()));
             data.put("commentId", String.valueOf(e.getCommentId()));
-            // 앱에서 처리할 딥링크 규약
             data.put("deeplink", "votey://vote/" + e.getVoteId() + "?commentId=" + e.getCommentId());
 
             var tokens = deviceTokenRepository.findActiveTokensByUserId(targetUserId);
+
+            log.info("[ALERT] targetUserId={}, nickname='{}', isReplyTarget={}, tokenCount={}, title='{}', body='{}'",
+                    targetUserId, nickname, isReplyTarget, tokens.size(), title, body);
+
             for (String token : tokens) {
                 try {
+                    String masked = token.length() > 10 ? token.substring(0, 10) + "..." : token;
+                    log.info("[ALERT->FCM] userId={} token={} 전송 시작", targetUserId, masked);
+
                     fcmMessageSendService.sendBackgroundAlert(token, title, body, data);
+
+                    log.info("[ALERT->FCM] userId={} token={} 전송 성공", targetUserId, masked);
                 } catch (Exception ex) {
-                    // FcmException 매핑해두셨다면 여기서 무효 토큰 정리도 가능
-                    log.warn("FCM 전송 실패 userId={} token={} msg={}", targetUserId, token, ex.getMessage());
+                    log.warn("[ALERT->FCM FAIL] userId={} token={} msg={}", targetUserId, token, ex.getMessage());
                 }
             }
         }
