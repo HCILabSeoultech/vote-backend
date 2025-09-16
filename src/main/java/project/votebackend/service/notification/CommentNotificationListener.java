@@ -17,7 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CommentNotificationListener {
 
-    private final FcmMessageSendService fcmMessageSendService;
+    private final ExpoPushService expoPushService; // FCM 대신 Expo 사용
     private final DeviceTokenRepository deviceTokenRepository;
     private final UserRepository userRepository;
 
@@ -65,14 +65,14 @@ public class CommentNotificationListener {
 
             for (String token : tokens) {
                 try {
-                    String masked = token.length() > 10 ? token.substring(0, 10) + "..." : token;
-                    log.info("[ALERT->FCM] userId={} token={} 전송 시작", targetUserId, masked);
+                    String masked = token.length() > 20 ? token.substring(0, 20) + "..." : token;
+                    log.info("[ALERT->EXPO] userId={} token={} 전송 시작", targetUserId, masked);
 
-                    fcmMessageSendService.sendBackgroundAlert(token, title, body, data);
+                    expoPushService.sendBackgroundAlert(token, title, body, data);
 
-                    log.info("[ALERT->FCM] userId={} token={} 전송 성공", targetUserId, masked);
+                    log.info("[ALERT->EXPO] userId={} token={} 전송 성공", targetUserId, masked);
                 } catch (Exception ex) {
-                    log.warn("[ALERT->FCM FAIL] userId={} token={} msg={}", targetUserId, token, ex.getMessage());
+                    log.warn("[ALERT->EXPO FAIL] userId={} token={} msg={}", targetUserId, token, ex.getMessage());
                 }
             }
         }
