@@ -43,7 +43,7 @@ jobs:
 
       - name: Write firebase service account key
         run: |
-          echo "${{ secrets.FCM_KEY_JSON }}" > ./src/main/resources/firebase/firebase-key.json
+          printf '%s' "${{ secrets.FCM_KEY_JSON }}" > ./src/main/resources/firebase/firebase-key.json
 
       - name: Build Project
         run: ./gradlew clean build -x test
