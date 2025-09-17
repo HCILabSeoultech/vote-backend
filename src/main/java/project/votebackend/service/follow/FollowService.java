@@ -1,11 +1,13 @@
 package project.votebackend.service.follow;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.follow.Follow;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.follow.FollowUserDto;
+import project.votebackend.dto.notification.FollowCreatedEvent;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.FollowException;
 import project.votebackend.repository.follow.FollowRepository;
@@ -22,6 +24,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher publisher;
 
     // 유저네임을 통한 id값 get
     private Long getUserIdByUsername(String username) {
@@ -56,6 +59,8 @@ public class FollowService {
                 .build();
 
         followRepository.save(follow);
+        publisher.publishEvent(new FollowCreatedEvent(follower.getUserId(), following.getUserId()));
+
         return follow.getFollowId();
     }
 
