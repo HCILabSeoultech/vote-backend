@@ -6,9 +6,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import project.votebackend.domain.notification.Notification;
 import project.votebackend.dto.notification.CommentCreatedEvent;
 import project.votebackend.repository.auth.DeviceTokenRepository;
 import project.votebackend.repository.user.UserRepository;
+import project.votebackend.type.NotificationType;
 
 import java.util.*;
 
@@ -20,6 +22,7 @@ public class CommentNotificationListener {
     private final ExpoPushService expoPushService; // FCM 대신 Expo 사용
     private final DeviceTokenRepository deviceTokenRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -49,8 +52,8 @@ public class CommentNotificationListener {
 
             String title = isReplyTarget ? "내 댓글에 답글이 달렸어요" : "내 글에 댓글이 달렸어요";
             String body  = isReplyTarget
-                    ? nickname + " 님이 내 댓글에 답글을 남겼습니다."
-                    : nickname + " 님이 내 글에 댓글을 남겼습니다.";
+                    ? nickname + "님이 내 댓글에 답글을 남겼습니다."
+                    : nickname + "님이 내 글에 댓글을 남겼습니다.";
 
             Map<String, String> data = new HashMap<>();
             data.put("type", isReplyTarget ? "REPLY" : "COMMENT");
@@ -59,6 +62,17 @@ public class CommentNotificationListener {
             data.put("deeplink", "votey://vote/" + e.getVoteId() + "?commentId=" + e.getCommentId());
 
             var tokens = deviceTokenRepository.findActiveTokensByUserId(targetUserId);
+
+            notificationService.save(
+                    Notification.builder()
+                            .targetUserId(targetUserId)
+                            .type(isReplyTarget ? NotificationType.REPLY : NotificationType.COMMENT)
+                            .title(title)
+                            .body(body)
+                            .voteId(e.getVoteId())
+                            .commentId(e.getCommentId())
+                            .build()
+            );
 
             log.info("[ALERT] targetUserId={}, nickname='{}', isReplyTarget={}, tokenCount={}, title='{}', body='{}'",
                     targetUserId, nickname, isReplyTarget, tokens.size(), title, body);
