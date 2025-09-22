@@ -301,5 +301,8 @@ public class VoteService {
         voteRepository.save(vote);
     }
 
-    //
+    @Transactional(readOnly = true)
+    public boolean isMine(Long voteId, Long userId) {
+        return voteRepository.existsByVoteIdAndUser_UserId(voteId, userId);
+    }
 }

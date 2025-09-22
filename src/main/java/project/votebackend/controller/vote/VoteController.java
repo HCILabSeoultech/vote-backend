@@ -88,4 +88,12 @@ public class VoteController {
         voteService.updateVote(voteId, userDetails.getUsername(), request);
         return ResponseEntity.ok("success");
     }
+
+    // 내가 작성한 글인지 확인
+    @GetMapping("{voteId}/isMine")
+    @Operation(summary = "작성자 확인 API", description = "내가 작성한 글인지 확인합니다.")
+    public ResponseEntity<Boolean> isMyVote(@PathVariable Long voteId,
+                                      @AuthenticationPrincipal CustumUserDetails userDetails){
+        return ResponseEntity.ok(voteService.isMine(voteId, userDetails.getId()));
+    }
 }

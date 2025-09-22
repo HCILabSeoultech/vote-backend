@@ -244,4 +244,5 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             @Param("offset") int offset
     );
 
+    boolean existsByVoteIdAndUser_UserId(Long voteId, Long userId);
 }
