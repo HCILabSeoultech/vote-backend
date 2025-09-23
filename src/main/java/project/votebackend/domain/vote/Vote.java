@@ -48,6 +48,9 @@ public class Vote extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private VoteType voteType;
 
+    @Column
+    private Boolean createdByAI;
+
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
     private Set<VoteOption> options = new HashSet<>();

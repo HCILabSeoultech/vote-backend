@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입, 공유 등의 인증 없이 접근 가능한 엔드포인트
                         .requestMatchers("/location/verify","/auth/**", "/image/upload", "/share/vote/**",
-                                "/email/**", "/result/**", "/ingest/**").permitAll()
+                                "/email/**", "/result/**", "/ingest/**", "/ai/**").permitAll()
 
                         // 댓글 조회만 허용
                         .requestMatchers(HttpMethod.GET, "/comment/**").permitAll()

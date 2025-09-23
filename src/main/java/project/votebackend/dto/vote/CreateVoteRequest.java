@@ -17,4 +17,5 @@ public class CreateVoteRequest {
     private boolean draftHelpVersionSeen;
     private List<VoteOptionDto> options;
     private List<String> imageUrls;
+    private Boolean createdByAI;
 }
