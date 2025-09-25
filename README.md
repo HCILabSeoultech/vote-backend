@@ -53,4 +53,13 @@ VoteY는 투표를 중심으로 의견을 공유하고, 결과를 심층적으�
 - FastAPI 서버를 통해 Spring과 연동
 - 앱 내 AI 추천 투표 제공
 
+| 기능 | 화면 |
+|------|------|
+| **홈 탭** | <img width="259" height="556" alt="스크린샷 2025-09-25 오후 3 31 28" src="https://github.com/user-attachments/assets/c81e7e30-4631-4e43-8b12-324192eca5e1" /> |
+| **통계 분석** |  <img width="264" height="544" alt="스크린샷 2025-09-25 오후 3 31 37" src="https://github.com/user-attachments/assets/0e8b3fe9-f6d7-449d-873d-d680c1a64d48" /> |
+| **인기 탭** | <img width="261" height="557" alt="스크린샷 2025-09-25 오후 3 31 46" src="https://github.com/user-attachments/assets/0f8ea564-8a9e-45d8-baf3-3d0a18e9cabd" /> |
+| **글작성 탭** | <img width="261" height="550" alt="스크린샷 2025-09-25 오후 3 31 52" src="https://github.com/user-attachments/assets/8b317fc3-af73-46a8-9ede-fc4e4f004ccf" /> |
+| **이슈 탭** |  <img width="266" height="553" alt="스크린샷 2025-09-25 오후 3 31 58" src="https://github.com/user-attachments/assets/6c6ff8de-21fb-4c2c-affd-d5d998e0f72b" /> |
+| **마이페이지** |<img width="264" height="553" alt="스크린샷 2025-09-25 오후 3 32 04" src="https://github.com/user-attachments/assets/f4db5ca6-3abc-41f7-bdbe-aef9eb86477f" /> |
+
 ---
