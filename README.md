@@ -31,6 +31,11 @@ VoteY는 투표를 중심으로 의견을 공유하고, 결과를 심층적으�
 
 ---
 
+### ERD
+<img width="1116" height="953" alt="스크린샷 2025-09-25 오후 3 51 31" src="https://github.com/user-attachments/assets/a847f086-7996-4b91-905b-491963d2812d" />
+
+---
+
 ## 🚀 주요 기능
 
 ### 📝 투표 기능
