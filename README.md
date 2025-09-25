@@ -31,6 +31,10 @@ VoteY는 투표를 중심으로 의견을 공유하고, 결과를 심층적으�
 
 ---
 
+### 시스템 아키텍처
+<img width="1156" height="812" alt="스크린샷 2025-09-25 오후 4 19 15" src="https://github.com/user-attachments/assets/4dc0b9b8-b0df-4138-a5c3-0261c420602b" />
+
+
 ### ERD
 <img width="1116" height="953" alt="스크린샷 2025-09-25 오후 3 51 31" src="https://github.com/user-attachments/assets/a847f086-7996-4b91-905b-491963d2812d" />
 
