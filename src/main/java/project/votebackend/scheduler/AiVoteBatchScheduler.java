@@ -27,7 +27,7 @@ public class AiVoteBatchScheduler {
     @Value("#{'${fastapi.categories}'.split(',')}")
     private List<String> categories;
 
-    @Scheduled(cron = "0 30 */12 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 30 0 * * *", zone = "Asia/Seoul")
     public void runVoteBatchIngest() {
         for (String categoryStr : categories) {
             final String url = String.format("%s%s/%s", baseUrl, secureVotePrefix, categoryStr);
