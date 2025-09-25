@@ -9,24 +9,25 @@ VoteY는 투표를 중심으로 의견을 공유하고, 결과를 심층적으�
 
 ### 🛠️ 기술 스택
 
-### Backend
-- Java 17
-- Spring Boot 3.4.3  
-- Spring Data JPA
-- Spring Security
-- Redis 
-- PostgreSQL (AWS RDS)
+### Backend & Language
+![Java](https://img.shields.io/badge/Java-17-007396?logo=java&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white)
+![JPA](https://img.shields.io/badge/JPA-Hibernate-59666C?logo=hibernate&logoColor=white)
+
+### Database & Cache
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-AWS%20RDS-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis&logoColor=white)
 
 ### Infra & DevOps
-- AWS S3 
-- AWS EC2 
-- AWS RDS (PostgreSQL) 
-- Redis
-- Docker & Docker Compose
-- GitHub Actions
+![AWS EC2](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonaws&logoColor=white)
+![AWS S3](https://img.shields.io/badge/AWS-S3-569A31?logo=amazonaws&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white)
 
-### AI
-- FastAPI
+### AI & Others
+![FastAPI](https://img.shields.io/badge/FastAPI-Generative%20AI-009688?logo=fastapi&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-API%20Docs-85EA2D?logo=swagger&logoColor=black)
+![Notion](https://img.shields.io/badge/Notion-Team%20Collab-000000?logo=notion&logoColor=white)
 
 ---
 
