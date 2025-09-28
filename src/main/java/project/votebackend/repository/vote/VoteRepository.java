@@ -34,7 +34,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
          -- 내가 이미 참여한 투표 제외: 참여 테이블/컬럼명에 맞게 수정
          AND NOT EXISTS (
                SELECT 1
-                 FROM vote_selection s
+                 FROM vote_selections s
                 WHERE s.vote_id = v.vote_id
                   AND s.user_id = :userId
              )
@@ -73,13 +73,13 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     //메인페이지 글 개수 count
     @Query(value = """
     WITH base AS (
-      SELECT v.vote_id
+      SELECT v.*
         FROM vote v
        WHERE v.status = 'PUBLISHED'
          AND (v.finish_time IS NULL OR v.finish_time > NOW())
          AND NOT EXISTS (
                SELECT 1
-                 FROM vote_selection s
+                 FROM vote_selections s
                 WHERE s.vote_id = v.vote_id
                   AND s.user_id = :userId
              )
