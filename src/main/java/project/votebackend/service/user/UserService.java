@@ -27,6 +27,8 @@ import project.votebackend.type.ErrorCode;
 import project.votebackend.type.Grade;
 import project.votebackend.type.VoteStatus;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +54,7 @@ public class UserService {
         Long participatedCount = voteSelectRepository.countByUserId(userId);
 
         // 등급 계산
-        long avg = calculateAverageParticipantCount(userId);
+        long avg = calculateThisMonthParticipantCount(userId);
         Grade dynamicGrade = Grade.fromAverage(avg);
 
         Long followerCount = followRepository.countByFollowing(user);
@@ -98,7 +100,7 @@ public class UserService {
         Long followingCount = followRepository.countByFollower(user);
 
         // 등급 계산
-        long avg = calculateAverageParticipantCount(userId);
+        long avg = calculateThisMonthParticipantCount(userId);
 
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
@@ -114,28 +116,32 @@ public class UserService {
                 .build();
     }
 
-    // 평균 투표 수 계산
-    private long calculateAverageParticipantCount(Long userId) {
-        // 최근 10개 투표 가져오기
-        List<Vote> recentVotes = voteRepository.findTop10ByUser_UserIdOrderByCreatedAtDesc(userId);
+    // 이번달 투표 수 계산
+    private long calculateThisMonthParticipantCount(Long userId) {
+        // 이번 달 시작 ~ 끝
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).atTime(23, 59, 59);
 
-        if (recentVotes.isEmpty()) return 0;
+        // 이번 달에 생성된 투표 가져오기
+        List<Vote> monthlyVotes = voteRepository.findByUser_UserIdAndCreatedAtBetween(userId, startOfMonth, endOfMonth);
+
+        if (monthlyVotes.isEmpty()) return 0;
 
         // 투표 ID 리스트 추출
-        List<Long> voteIds = recentVotes.stream()
+        List<Long> voteIds = monthlyVotes.stream()
                 .map(Vote::getVoteId)
                 .toList();
 
-        // 참여자 수 조회 (참여자 없는 투표는 조회되지 않음)
+        // 참여자 수 조회 (투표별 참여자 수)
         Map<Long, Long> countMap = voteSelectRepository.countByVoteIdsGroupedIncludingZero(voteIds);
 
-        // 참여자 수 없는 투표는 0으로 간주하여 평균 계산
+        // 합계 계산
         long total = 0L;
         for (Long voteId : voteIds) {
             total += countMap.getOrDefault(voteId, 0L);
         }
 
-        return total / voteIds.size();
+        return total;
     }
 
     //회원정보 수정

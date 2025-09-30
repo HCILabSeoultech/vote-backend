@@ -11,6 +11,7 @@ import project.votebackend.domain.vote.Vote;
 import project.votebackend.type.ReactionType;
 import project.votebackend.type.VoteStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -192,8 +193,12 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     """)
     List<Vote> findVotesSortedByLikes(@Param("status") String status, Pageable pageable);
 
-    // 최근 10개의 투표 조회
-    List<Vote> findTop10ByUser_UserIdOrderByCreatedAtDesc(Long userId);
+    // 특정 유저가 이번 달에 생성한 투표 조회
+    List<Vote> findByUser_UserIdAndCreatedAtBetween(
+            Long userId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 
     // 투표 검색
     @Query(value = """
