@@ -124,7 +124,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             AND v.user_id = :aiUserId
         )
         SELECT * FROM ai_pool v
-        ORDER BY md5(CONCAT(:userId::text, '-', v.vote_id::text, '-', to_char(CURRENT_DATE,'YYYYMMDD')))
+        ORDER BY md5(CONCAT(:userId, '-', v.vote_id, '-', to_char(CURRENT_DATE,'YYYYMMDD')))
         LIMIT :limit
       """, nativeQuery = true)
     List<Vote> findAiCandidatesForCategories(
