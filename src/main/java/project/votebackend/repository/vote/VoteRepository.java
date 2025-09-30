@@ -32,6 +32,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
        WHERE v.status = 'PUBLISHED'
          -- 종료된 투표 제외: finish_time 컬럼 가정 (없으면 상태값으로 대체)
          AND (v.finish_time IS NULL OR v.finish_time > NOW())
+         AND v.user_id <> :aiUserId
          -- 내가 이미 참여한 투표 제외: 참여 테이블/컬럼명에 맞게 수정
          AND NOT EXISTS (
                SELECT 1
@@ -52,15 +53,14 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
      
              UNION
      
-             -- 내가 팔로우한 사람이 쓴 글 (AI 제외)
-             SELECT b.*
-               FROM base b
-              WHERE b.user_id IN (
-                    SELECT f.following_id
-                      FROM follow f
-                     WHERE f.follower_id = :userId
-              )
-                AND COALESCE(b.is_ai, FALSE) = FALSE
+             -- 내가 팔로우한 사람
+            SELECT b.*
+              FROM base b
+             WHERE b.user_id IN (
+                   SELECT f.following_id
+                     FROM follow f
+                    WHERE f.follower_id = :userId
+             )
        ) t
      ORDER BY t.created_at DESC
      LIMIT :limit OFFSET :offset
@@ -69,7 +69,8 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             @Param("userId") Long userId,
             @Param("categoryIds") List<Long> categoryIds,
             @Param("limit") int limit,
-            @Param("offset") int offset
+            @Param("offset") int offset,
+            @Param("aiUserId") Long aiUserId
     );
 
     //메인페이지 글 개수 count
@@ -79,6 +80,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
         FROM vote v
        WHERE v.status = 'PUBLISHED'
          AND (v.finish_time IS NULL OR v.finish_time > NOW())
+         AND v.user_id <> :aiUserId
          AND NOT EXISTS (
                SELECT 1
                  FROM vote_selections s
@@ -107,7 +109,8 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     """, nativeQuery = true)
     long countMainPageVotes(
             @Param("userId") Long userId,
-            @Param("categoryIds") List<Long> categoryIds
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("aiUserId") Long aiUserId
     );
 
     // AI 후보
@@ -118,7 +121,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
           WHERE v.status='PUBLISHED'
             AND (v.finish_time IS NULL OR v.finish_time > NOW())
             AND v.category_id IN (:categoryIds)
-            AND v.is_ai = TRUE
+            AND v.user_id = :aiUserId
         )
         SELECT * FROM ai_pool v
         ORDER BY md5(CONCAT(:userId::text, '-', v.vote_id::text, '-', to_char(CURRENT_DATE,'YYYYMMDD')))
@@ -127,7 +130,8 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     List<Vote> findAiCandidatesForCategories(
             @Param("userId") Long userId,
             @Param("categoryIds") List<Long> categoryIds,
-            @Param("limit") int limit
+            @Param("limit") int limit,
+            @Param("aiUserId") Long aiUserId
     );
 
     // 인기 후보

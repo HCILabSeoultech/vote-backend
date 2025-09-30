@@ -43,8 +43,9 @@ public class VoteLoadService {
         int size   = pageable.getPageSize();
 
         // 기본 피드 (최신순)
-        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size, offset);
-        long total = voteRepository.countMainPageVotes(userId, categoryIds);
+        Long aiUserId = 20L;
+        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size, offset, aiUserId);
+        long total = voteRepository.countMainPageVotes(userId, categoryIds, aiUserId);
 
         // 후보 수량 결정 (cadence/ratio는 팀 정책값)
         final int cadence    = 3;         // 3개마다 1개 삽입 시도
@@ -52,7 +53,7 @@ public class VoteLoadService {
         int maxInjects = Math.max(1, size / (cadence + 1)); // 대략적인 삽입 수
 
         // 후보 풀 확보
-        List<Vote> ai = voteRepository.findAiCandidatesForCategories(userId, categoryIds, maxInjects * 2);
+        List<Vote> ai = voteRepository.findAiCandidatesForCategories(userId, categoryIds, maxInjects * 2, aiUserId);
         List<Vote> pop = voteRepository.findPopularCandidatesForCategories(categoryIds, maxInjects * 2);
 
         // 머지
