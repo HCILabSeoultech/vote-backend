@@ -135,23 +135,23 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     );
 
     // 인기 후보
-    @Query(value = """
-        WITH pop_pool AS (
-          SELECT v.*,
-                 (v.like_count*1.0 + v.comment_count*0.7 + v.participation*0.4) AS pop_score
-          FROM vote v
-          WHERE v.status='PUBLISHED'
-            AND (v.finish_time IS NULL OR v.finish_time > NOW())
-            AND v.category_id IN (:categoryIds)
-            AND v.created_at >= NOW() - INTERVAL '14 days'
-        )
-        SELECT * FROM pop_pool
-        ORDER BY pop_score DESC, created_at DESC
-        LIMIT :limit
-      """, nativeQuery = true)
-    List<Vote> findPopularCandidatesForCategories(
-            @Param("categoryIds") List<Long> categoryIds,
-            @Param("limit") int limit
+    @Query("""
+        SELECT v
+        FROM Vote v
+        LEFT JOIN v.selections s
+        WHERE v.status = 'PUBLISHED'
+          AND (v.finishTime IS NULL OR v.finishTime > CURRENT_TIMESTAMP)
+          AND NOT EXISTS (
+            SELECT 1 FROM VoteSelection vs
+            WHERE vs.vote = v
+              AND vs.user.userId = :userId
+          )
+        GROUP BY v
+        ORDER BY COUNT(s) DESC, v.createdAt DESC
+        """)
+    List<Vote> findPopularCandidatesGlobal(
+            @Param("userId") Long userId,
+            Pageable pageable
     );
 
     //내가 투표한 글

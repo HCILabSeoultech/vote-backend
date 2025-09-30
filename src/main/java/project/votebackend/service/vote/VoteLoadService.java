@@ -42,30 +42,49 @@ public class VoteLoadService {
         int offset = pageable.getPageNumber() * pageable.getPageSize();
         int size   = pageable.getPageSize();
 
-        // 기본 피드 (최신순)
         Long aiUserId = 20L;
-        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size, offset, aiUserId);
-        long total = voteRepository.countMainPageVotes(userId, categoryIds, aiUserId);
 
-        // 후보 수량 결정 (cadence/ratio는 팀 정책값)
-        final int cadence    = 3;         // 3개마다 1개 삽입 시도
-        final double aiRatio = 0.5;       // 삽입 지점 중 50%는 AI, 50%는 인기
-        int maxInjects = Math.max(1, size / (cadence + 1)); // 대략적인 삽입 수
+        // 기본 피드
+        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size * 6, 0, aiUserId);
 
-        // 후보 풀 확보
-        List<Vote> ai = voteRepository.findAiCandidatesForCategories(userId, categoryIds, maxInjects * 2, aiUserId);
-        List<Vote> pop = voteRepository.findPopularCandidatesForCategories(categoryIds, maxInjects * 2);
+        // AI/인기 후보 풀
+        List<Vote> ai  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, size * 4, aiUserId);
+        List<Vote> pop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, size * 4));
 
-        // 머지
+        // 병합
         List<Vote> merged = mergeWithDeterministicRandom(
-                base, ai, pop, userId, LocalDate.now(), cadence, aiRatio, size
+                base, ai, pop, userId, LocalDate.now(), 3, 0.5, size * 4
         );
 
-        // 통계 붙여서 DTO 변환
-        List<Long> voteIds = merged.stream().map(Vote::getVoteId).toList();
+        // 최소 개수 보장 (40개)
+        int minCount = 40;
+        if (merged.size() < minCount) {
+            // 부족한 만큼 AI/인기글에서 더 채움
+            Set<Long> usedIds = merged.stream().map(Vote::getVoteId).collect(Collectors.toSet());
+
+            List<Vote> extraAi  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, minCount, aiUserId);
+            List<Vote> extraPop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, minCount));
+
+            for (Vote v : extraAi) {
+                if (merged.size() >= minCount) break;
+                if (usedIds.add(v.getVoteId())) merged.add(v);
+            }
+            for (Vote v : extraPop) {
+                if (merged.size() >= minCount) break;
+                if (usedIds.add(v.getVoteId())) merged.add(v);
+            }
+        }
+
+        // 페이지네이션
+        int fromIndex = Math.min(offset, merged.size());
+        int toIndex   = Math.min(offset + size, merged.size());
+        List<Vote> paged = merged.subList(fromIndex, toIndex);
+
+        // 통계 + PageImpl
+        List<Long> voteIds = paged.stream().map(Vote::getVoteId).toList();
         Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
 
-        Page<Vote> pageWrapped = new PageImpl<>(merged, pageable, total /* total은 '기본 피드' 기준 유지 */);
+        Page<Vote> pageWrapped = new PageImpl<>(paged, pageable, Math.max(merged.size(), minCount));
         return voteStatisticsUtil.getLoadVoteDtos(userId, pageWrapped, stats, pageable);
     }
 
