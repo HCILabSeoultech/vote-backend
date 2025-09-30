@@ -43,13 +43,13 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     )
     SELECT *
         FROM (
-             -- 내가 작성한 글 (AI 제외)
-             SELECT * FROM base WHERE user_id = :userId AND COALESCE(is_ai, FALSE) = FALSE
+             -- 내가 작성한 글 
+             SELECT * FROM base WHERE user_id = :userId
      
              UNION
      
-             -- 내가 관심 설정한 카테고리의 글 (AI 제외)
-             SELECT * FROM base WHERE category_id IN (:categoryIds) AND COALESCE(is_ai, FALSE) = FALSE
+             -- 내가 관심 설정한 카테고리의 글 
+             SELECT * FROM base WHERE category_id IN (:categoryIds)                                                                                                  
      
              UNION
      
