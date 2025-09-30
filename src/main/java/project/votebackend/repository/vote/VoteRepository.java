@@ -41,26 +41,27 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
              )
     )
     SELECT *
-      FROM (
-            -- 내가 작성한 글
-            SELECT * FROM base WHERE user_id = :userId
-    
-            UNION
-    
-            -- 내가 관심 설정한 카테고리의 글
-            SELECT * FROM base WHERE category_id IN (:categoryIds)
-    
-            UNION
-    
-            -- 내가 팔로우한 사람이 쓴 글
-            SELECT b.*
-              FROM base b
-             WHERE b.user_id IN (
-                   SELECT f.following_id
-                     FROM follow f
-                    WHERE f.follower_id = :userId
-             )
-      ) t
+        FROM (
+             -- 내가 작성한 글 (AI 제외)
+             SELECT * FROM base WHERE user_id = :userId AND COALESCE(is_ai, FALSE) = FALSE
+     
+             UNION
+     
+             -- 내가 관심 설정한 카테고리의 글 (AI 제외)
+             SELECT * FROM base WHERE category_id IN (:categoryIds) AND COALESCE(is_ai, FALSE) = FALSE
+     
+             UNION
+     
+             -- 내가 팔로우한 사람이 쓴 글 (AI 제외)
+             SELECT b.*
+               FROM base b
+              WHERE b.user_id IN (
+                    SELECT f.following_id
+                      FROM follow f
+                     WHERE f.follower_id = :userId
+              )
+                AND COALESCE(b.is_ai, FALSE) = FALSE
+       ) t
      ORDER BY t.created_at DESC
      LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
@@ -107,6 +108,46 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     long countMainPageVotes(
             @Param("userId") Long userId,
             @Param("categoryIds") List<Long> categoryIds
+    );
+
+    // AI 후보
+    @Query(value = """
+        WITH ai_pool AS (
+          SELECT v.*
+          FROM vote v
+          WHERE v.status='PUBLISHED'
+            AND (v.finish_time IS NULL OR v.finish_time > NOW())
+            AND v.category_id IN (:categoryIds)
+            AND v.is_ai = TRUE
+        )
+        SELECT * FROM ai_pool v
+        ORDER BY md5(CONCAT(:userId::text, '-', v.vote_id::text, '-', to_char(CURRENT_DATE,'YYYYMMDD')))
+        LIMIT :limit
+      """, nativeQuery = true)
+    List<Vote> findAiCandidatesForCategories(
+            @Param("userId") Long userId,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("limit") int limit
+    );
+
+    // 인기 후보
+    @Query(value = """
+        WITH pop_pool AS (
+          SELECT v.*,
+                 (v.like_count*1.0 + v.comment_count*0.7 + v.participation*0.4) AS pop_score
+          FROM vote v
+          WHERE v.status='PUBLISHED'
+            AND (v.finish_time IS NULL OR v.finish_time > NOW())
+            AND v.category_id IN (:categoryIds)
+            AND v.created_at >= NOW() - INTERVAL '14 days'
+        )
+        SELECT * FROM pop_pool
+        ORDER BY pop_score DESC, created_at DESC
+        LIMIT :limit
+      """, nativeQuery = true)
+    List<Vote> findPopularCandidatesForCategories(
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("limit") int limit
     );
 
     //내가 투표한 글
