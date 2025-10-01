@@ -122,9 +122,15 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             AND (v.finish_time IS NULL OR v.finish_time > NOW())
             AND v.category_id IN (:categoryIds)
             AND v.user_id = :aiUserId
+            AND NOT EXISTS (
+               SELECT 1
+               FROM vote_selections s
+               WHERE s.vote_id = v.vote_id
+               AND s.user_id = :userId
+            )
         )
         SELECT * FROM ai_pool v
-        ORDER BY md5(CONCAT(CAST(:userId AS text), '-', v.vote_id::text, '-', to_char(CURRENT_DATE,'YYYYMMDD')))                                                                                     
+        ORDER BY created_at DESC, vote_id DESC
         LIMIT :limit
       """, nativeQuery = true)
     List<Vote> findAiCandidatesForCategories(
@@ -146,9 +152,14 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             WHERE vs.vote = v
               AND vs.user.userId = :userId
           )
-        GROUP BY v
-        ORDER BY COUNT(s) DESC, v.createdAt DESC
-        """)
+        ORDER BY (
+          SELECT COUNT(s2)
+          FROM VoteSelection s2
+          WHERE s2.vote = v
+        ) DESC,
+        v.createdAt DESC,
+        v.voteId DESC
+    """)
     List<Vote> findPopularCandidatesGlobal(
             @Param("userId") Long userId,
             Pageable pageable
