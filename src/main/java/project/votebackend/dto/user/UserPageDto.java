@@ -14,13 +14,10 @@ public class UserPageDto {
 
     private String name;
     private String profileImage;
-    private String grade;
     private String address;
     private Long followerCount;
     private Long followingCount;
     private MypageStat mypageStat;
-    private Long postCount;
-    private String level;
-    private Long participatedCount;
+    private LevelInfo levelInfo;
     private LocalDateTime createdAt;
 }

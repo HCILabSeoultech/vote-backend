@@ -51,10 +51,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
-        // 2. 게시글 수, 팔로워 수, 팔로잉 수 조회
-        Long postCount = voteRepository.countByUser_UserId(userId);
-        Long participatedCount = voteSelectRepository.countByUserId(userId);
-
         // 1) 월별 6달
         List<Object[]> rows = userStatDao.findMonthlyReceivedVotes6(userId);
         List<MonthlyStat> monthly = new ArrayList<>(rows.size());
@@ -82,7 +78,7 @@ public class UserService {
                 : BigDecimal.ZERO;
 
         // 5) 등급 계산
-        String level = mapToLevel(avgExcl);
+        LevelInfo levelInfo = mapToLevel(avgExcl);
 
         MypageStat mypageStat = MypageStat.builder()
                 .monthly(monthly)
@@ -101,9 +97,7 @@ public class UserService {
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .mypageStat(mypageStat)
-                .level(level)
-                .postCount(postCount)
-                .participatedCount(participatedCount)
+                .levelInfo(levelInfo)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
@@ -212,13 +206,26 @@ public class UserService {
         return user.isDraftHelpVersionSeen();
     }
 
-    private String mapToLevel(BigDecimal avgPerMonthExcl) {
+    private LevelInfo mapToLevel(BigDecimal avgPerMonthExcl) {
         int v = avgPerMonthExcl.intValue();
-        if (v >= 1000000) return "Master";
-        if (v >= 100000)  return "Diamond";
-        if (v >= 10000)  return "Platinum";
-        if (v >= 500)   return "Gold";
-        if (v >= 100)   return "Silver";
-        return "Bronze";
+
+        if (v >= 1_000_000) {
+            return new LevelInfo("Master", null); // 최고 등급이면 다음 없음
+        }
+        else if (v >= 100_000) {
+            return new LevelInfo("Diamond", "Master");
+        }
+        else if (v >= 10_000) {
+            return new LevelInfo("Platinum", "Diamond");
+        }
+        else if (v >= 500) {
+            return new LevelInfo("Gold", "Platinum");
+        }
+        else if (v >= 100) {
+            return new LevelInfo("Silver", "Gold");
+        }
+        else {
+            return new LevelInfo("Bronze", "Silver");
+        }
     }
 }
