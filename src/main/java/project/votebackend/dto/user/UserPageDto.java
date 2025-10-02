@@ -20,6 +20,7 @@ public class UserPageDto {
     private Long followingCount;
     private MypageStat mypageStat;
     private Long postCount;
+    private String level;
     private Long participatedCount;
     private LocalDateTime createdAt;
 }

@@ -69,6 +69,21 @@ public class UserService {
         long total  = userStatDao.findTotalReceivedVotes(userId);
         int months  = userStatDao.findMonthsSinceSignup(userId);
 
+        // 3) 이번 달 받은 투표 수
+        long currentMonth = userStatDao.findCurrentMonthReceivedVotes(userId);
+
+        // 4) 이번 달 제외 지표 계산
+        long totalExclThis = total - currentMonth;
+        int monthsExclThis = Math.max(months - 1, 0);
+
+        BigDecimal avgExcl = monthsExclThis > 0
+                ? BigDecimal.valueOf(totalExclThis)
+                .divide(BigDecimal.valueOf(monthsExclThis), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        // 5) 등급 계산
+        String level = mapToLevel(avgExcl);
+
         MypageStat mypageStat = MypageStat.builder()
                 .monthly(monthly)
                 .total(total)
@@ -86,6 +101,7 @@ public class UserService {
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .mypageStat(mypageStat)
+                .level(level)
                 .postCount(postCount)
                 .participatedCount(participatedCount)
                 .createdAt(user.getCreatedAt())
@@ -194,5 +210,15 @@ public class UserService {
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         return user.isDraftHelpVersionSeen();
+    }
+
+    private String mapToLevel(BigDecimal avgPerMonthExcl) {
+        int v = avgPerMonthExcl.intValue();
+        if (v >= 1000000) return "Master";
+        if (v >= 100000)  return "Diamond";
+        if (v >= 10000)  return "Platinum";
+        if (v >= 500)   return "Gold";
+        if (v >= 100)   return "Silver";
+        return "Bronze";
     }
 }

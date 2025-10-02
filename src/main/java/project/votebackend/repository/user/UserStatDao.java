@@ -91,4 +91,23 @@ public class UserStatDao {
         Number n = (Number) q.getSingleResult();
         return n.intValue();
     }
+
+    // 이번 달 받은 투표 수
+    public long findCurrentMonthReceivedVotes(Long userId) {
+        String sql = """
+            WITH now_m AS (
+              SELECT date_trunc('month', (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'))::date AS this_month_kst
+            )
+            SELECT COUNT(*)
+            FROM vote_selections vs
+            JOIN vote v ON v.vote_id = vs.vote_id
+            WHERE v.user_id = :userId
+              AND (vs.created_at AT TIME ZONE 'Asia/Seoul') >= (SELECT this_month_kst FROM now_m)
+              AND (vs.created_at AT TIME ZONE 'Asia/Seoul') <  ((SELECT this_month_kst FROM now_m) + interval '1 month')
+            """;
+        Query q = em.createNativeQuery(sql);
+        q.setParameter("userId", userId);
+        Number n = (Number) q.getSingleResult();
+        return n.longValue();
+    }
 }
