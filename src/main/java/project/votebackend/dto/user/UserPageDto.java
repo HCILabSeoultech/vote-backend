@@ -18,7 +18,7 @@ public class UserPageDto {
     private String address;
     private Long followerCount;
     private Long followingCount;
-    private Long avgParticipantCount;
+    private MypageStat mypageStat;
     private Long postCount;
     private Long participatedCount;
     private LocalDateTime createdAt;
