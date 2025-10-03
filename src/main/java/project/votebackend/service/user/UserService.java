@@ -21,16 +21,17 @@ import project.votebackend.repository.category.CategoryRepository;
 import project.votebackend.repository.follow.FollowRepository;
 import project.votebackend.repository.user.UserInterestRepository;
 import project.votebackend.repository.user.UserRepository;
+import project.votebackend.repository.user.UserStatDao;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ErrorCode;
-import project.votebackend.type.Grade;
 import project.votebackend.type.VoteStatus;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +43,7 @@ public class UserService {
     private final VoteSelectRepository voteSelectRepository;
     private final UserInterestRepository userInterestRepository;
     private final CategoryRepository categoryRepository;
+    private final UserStatDao userStatDao;
 
     // [마이페이지 조회] - 로그인한 본인의 정보를 조회
     public UserPageDto getMyPage(Long userId) {
@@ -49,13 +51,40 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
-        // 2. 게시글 수, 팔로워 수, 팔로잉 수 조회
-        Long postCount = voteRepository.countByUser_UserId(userId);
-        Long participatedCount = voteSelectRepository.countByUserId(userId);
+        // 1) 월별 6달
+        List<Object[]> rows = userStatDao.findMonthlyReceivedVotes6(userId);
+        List<MonthlyStat> monthly = new ArrayList<>(rows.size());
+        for (Object[] r : rows) {
+            String ymStr = (String) r[0];                 // "YYYY-MM"
+            long cnt     = ((Number) r[1]).longValue();
+            YearMonth ym = YearMonth.parse(ymStr);        // 바로 파싱
+            monthly.add(new MonthlyStat(ym, cnt));
+        }
 
-        // 등급 계산
-        long avg = calculateThisMonthParticipantCount(userId);
-        Grade dynamicGrade = Grade.fromAverage(avg);
+        // 2) 총합/개월수
+        long total  = userStatDao.findTotalReceivedVotes(userId);
+        int months  = userStatDao.findMonthsSinceSignup(userId);
+
+        // 3) 이번 달 받은 투표 수
+        long currentMonth = userStatDao.findCurrentMonthReceivedVotes(userId);
+
+        // 4) 이번 달 제외 지표 계산
+        long totalExclThis = total - currentMonth;
+        int monthsExclThis = Math.max(months - 1, 0);
+
+        BigDecimal avgExcl = monthsExclThis > 0
+                ? BigDecimal.valueOf(totalExclThis)
+                .divide(BigDecimal.valueOf(monthsExclThis), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        // 5) 등급 계산
+        LevelInfo levelInfo = mapToLevel(avgExcl);
+
+        MypageStat mypageStat = MypageStat.builder()
+                .monthly(monthly)
+                .total(total)
+                .months(months)
+                .build();
 
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
@@ -65,12 +94,10 @@ public class UserService {
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .address(user.getAddress())
-                .grade(dynamicGrade.getLabel())
-                .avgParticipantCount(avg)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
-                .postCount(postCount)
-                .participatedCount(participatedCount)
+                .mypageStat(mypageStat)
+                .levelInfo(levelInfo)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
@@ -99,49 +126,17 @@ public class UserService {
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
-        // 등급 계산
-        long avg = calculateThisMonthParticipantCount(userId);
-
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .address(user.getAddress())
-                .avgParticipantCount(avg)
                 .posts(voteDto)
                 .postCount(postCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .createdAt(user.getCreatedAt())
                 .build();
-    }
-
-    // 이번달 투표 수 계산
-    private long calculateThisMonthParticipantCount(Long userId) {
-        // 이번 달 시작 ~ 끝
-        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).atTime(23, 59, 59);
-
-        // 이번 달에 생성된 투표 가져오기
-        List<Vote> monthlyVotes = voteRepository.findByUser_UserIdAndCreatedAtBetween(userId, startOfMonth, endOfMonth);
-
-        if (monthlyVotes.isEmpty()) return 0;
-
-        // 투표 ID 리스트 추출
-        List<Long> voteIds = monthlyVotes.stream()
-                .map(Vote::getVoteId)
-                .toList();
-
-        // 참여자 수 조회 (투표별 참여자 수)
-        Map<Long, Long> countMap = voteSelectRepository.countByVoteIdsGroupedIncludingZero(voteIds);
-
-        // 합계 계산
-        long total = 0L;
-        for (Long voteId : voteIds) {
-            total += countMap.getOrDefault(voteId, 0L);
-        }
-
-        return total;
     }
 
     //회원정보 수정
@@ -209,5 +204,28 @@ public class UserService {
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         return user.isDraftHelpVersionSeen();
+    }
+
+    private LevelInfo mapToLevel(BigDecimal avgPerMonthExcl) {
+        int v = avgPerMonthExcl.intValue();
+
+        if (v >= 1_000_000) {
+            return new LevelInfo("Master", null); // 최고 등급이면 다음 없음
+        }
+        else if (v >= 100_000) {
+            return new LevelInfo("Diamond", "Master");
+        }
+        else if (v >= 10_000) {
+            return new LevelInfo("Platinum", "Diamond");
+        }
+        else if (v >= 500) {
+            return new LevelInfo("Gold", "Platinum");
+        }
+        else if (v >= 100) {
+            return new LevelInfo("Silver", "Gold");
+        }
+        else {
+            return new LevelInfo("Bronze", "Silver");
+        }
     }
 }
