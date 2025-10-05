@@ -209,19 +209,19 @@ public class UserService {
     private LevelInfo mapToLevel(BigDecimal avgPerMonthExcl) {
         int v = avgPerMonthExcl.intValue();
 
-        if (v >= 1_000_000) {
+        if (v >= 100_000) {
             return new LevelInfo("Master", null); // 최고 등급이면 다음 없음
         }
-        else if (v >= 100_000) {
+        else if (v >= 10_000) {
             return new LevelInfo("Diamond", "Master");
         }
-        else if (v >= 10_000) {
+        else if (v >= 1_000) {
             return new LevelInfo("Platinum", "Diamond");
         }
         else if (v >= 500) {
             return new LevelInfo("Gold", "Platinum");
         }
-        else if (v >= 100) {
+        else if (v >= 200) {
             return new LevelInfo("Silver", "Gold");
         }
         else {
