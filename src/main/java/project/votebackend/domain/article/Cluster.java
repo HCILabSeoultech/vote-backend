@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import project.votebackend.domain.BaseEntity;
+import project.votebackend.domain.reaction.NewsBookmark;
 import project.votebackend.type.Category;
 
 import java.util.ArrayList;
@@ -65,4 +66,7 @@ public class Cluster extends BaseEntity {
 
     @OneToMany(mappedBy = "cluster", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Article> articles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cluster", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NewsBookmark> bookmarks = new ArrayList<>();
 }

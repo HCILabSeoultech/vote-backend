@@ -338,7 +338,13 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     boolean existsByVoteIdAndUser_UserId(Long voteId, Long userId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from Vote v where v.createdByAI = true and v.createdAt < :cutoff")
-    int deleteAiVotesOlderThan(@Param("cutoff") LocalDateTime cutoff);
+    @Query("""
+        select v.voteId
+        from Vote v
+        where v.createdByAI = true
+          and v.createdAt < :cutoff
+        order by v.voteId asc
+    """)
+    List<Long> findAiVoteIdsBefore(@Param("cutoff") LocalDateTime cutoff,
+                                   org.springframework.data.domain.Pageable pageable);
 }

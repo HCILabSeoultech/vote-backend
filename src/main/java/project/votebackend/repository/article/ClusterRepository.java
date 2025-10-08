@@ -11,6 +11,7 @@ import project.votebackend.domain.article.Cluster;
 import project.votebackend.type.Category;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,24 +21,27 @@ public interface ClusterRepository extends JpaRepository<Cluster, Long> {
     Page<Cluster> findByCategory(Category category, Pageable pageable);
 
     @Query(value = """
-    SELECT 
-      c.cluster_id,
-      c.image_url,
-      c.title,
-      c.created_at
-    FROM cluster c
-    WHERE c.title ILIKE CONCAT('%', :keyword, '%')
-    ORDER BY c.created_at DESC
-    """,
-            countQuery = """
-    SELECT COUNT(*)
-    FROM cluster c
-    WHERE c.title ILIKE CONCAT('%', :keyword, '%')
-    """,
+        SELECT 
+          c.cluster_id,
+          c.image_url,
+          c.title,
+          c.created_at
+        FROM cluster c
+        WHERE c.title ILIKE CONCAT('%', :keyword, '%')
+        ORDER BY c.created_at DESC
+        """,
+                countQuery = """
+        SELECT COUNT(*)
+        FROM cluster c
+        WHERE c.title ILIKE CONCAT('%', :keyword, '%')
+        """,
             nativeQuery = true)
     Page<Object[]> searchClusterSummaries(@Param("keyword") String keyword, Pageable pageable);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from Cluster c where c.createdAt < :cutoff")
-    int deleteOlderThan(@Param("cutoff") LocalDateTime cutoff);
+    @Query("""
+       select c.id from Cluster c
+       where c.createdAt < :cutoff
+       order by c.id asc
+    """)
+    List<Long> findIdsByCreatedAtBefore(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 }
