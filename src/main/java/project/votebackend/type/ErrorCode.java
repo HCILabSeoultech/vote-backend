@@ -45,9 +45,9 @@ public enum ErrorCode {
     SEARCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 검색어입니다."),
 
     //Notification
-    NOTIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "알림 전송에 실패했습니다.");
-
-
+    NOTIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "알림 전송에 실패했습니다."),
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 알림입니다."),
+    NOT_MY_NOTIFICATION(HttpStatus.BAD_REQUEST, "나의 알림이 아닙니다.");
 
     private final HttpStatus httpStatus;
     private final String description;
