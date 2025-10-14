@@ -57,7 +57,7 @@ public class VoteService {
         try {
             voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+            throw new VoteException(ErrorCode.VOTE_TYPE_NOT_FOUND);
         }
 
         Vote vote = Vote.builder()
@@ -114,7 +114,7 @@ public class VoteService {
         try {
             voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+            throw new VoteException(ErrorCode.VOTE_TYPE_NOT_FOUND);
         }
 
         Vote vote = Vote.builder()
@@ -250,7 +250,7 @@ public class VoteService {
         try {
             voteType = VoteType.valueOf(request.getVoteType().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid voteType. Allowed values: TEXT, IMAGE, VIDEO");
+            throw new VoteException(ErrorCode.VOTE_TYPE_NOT_FOUND);
         }
 
         // 기본 필드 수정

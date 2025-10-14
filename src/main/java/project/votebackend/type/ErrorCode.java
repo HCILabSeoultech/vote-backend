@@ -26,6 +26,7 @@ public enum ErrorCode {
     VOTE_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 투표옵션입니다."),
     VOTE_ALREADY_FINISHED(HttpStatus.CONFLICT, "이미 종료된 투표입니다."),
     VOTE_SELECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "참여하지 않은 투표입니다."),
+    VOTE_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 투표 타입입니다."),
 
     //Comment
     PARENT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 댓글이 존재하지 않습니다."),
