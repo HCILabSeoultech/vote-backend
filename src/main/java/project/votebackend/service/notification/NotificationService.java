@@ -11,8 +11,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import project.votebackend.domain.notification.Notification;
 import project.votebackend.dto.notification.NotificationDto;
+import project.votebackend.exception.NotificationException;
 import project.votebackend.repository.notification.NotificationRepository;
 import project.votebackend.security.CustumUserDetails;
+import project.votebackend.type.ErrorCode;
 
 @Slf4j
 @Service
@@ -37,10 +39,10 @@ public class NotificationService {
     @Transactional
     public void markRead(Long userId, Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("NOTIFICATION_NOT_FOUND"));
+                .orElseThrow(() -> new NotificationException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
         if (!notification.getTargetUserId().equals(userId)) {
-            throw new SecurityException("NOT_YOUR_NOTIFICATION");
+            throw new NotificationException(ErrorCode.NOT_MY_NOTIFICATION);
         }
         if (!notification.isRead()) {
             notification.setRead(true);
