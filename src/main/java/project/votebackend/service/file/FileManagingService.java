@@ -117,7 +117,6 @@ public class FileManagingService {
 
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             String videoKey = "videos/" + fileName;
-//            String thumbnailKey = "thumbnails/" + fileName.replaceAll("\\..+$", ".jpg");
 
             log.info("[VIDEO-STORE] 영상 업로드 시작: key={}", videoKey);
 
@@ -131,38 +130,6 @@ public class FileManagingService {
             s3Client.putObject(videoRequest, RequestBody.fromBytes(file.getBytes()));
             log.info("[VIDEO-STORE] 영상 업로드 완료: key={}", videoKey);
 
-//            // 썸네일 생성
-//            File tempVideoFile = File.createTempFile("temp_video", null);
-//            file.transferTo(tempVideoFile);
-//            File thumbnailFile = File.createTempFile("temp_thumbnail", ".jpg");
-//
-//            log.info("[VIDEO-STORE] 썸네일 추출 시작: {}", tempVideoFile.getAbsolutePath());
-//            extractThumbnail(tempVideoFile, thumbnailFile);
-//            log.info("[VIDEO-STORE] 썸네일 추출 완료: {}", thumbnailFile.getAbsolutePath());
-//
-//            // 썸네일 압축/리사이즈
-//            ByteArrayOutputStream os = new ByteArrayOutputStream();
-//            Thumbnails.of(thumbnailFile)
-//                    .size(1080, 1080)
-//                    .outputFormat("jpg")
-//                    .outputQuality(0.5)
-//                    .toOutputStream(os);
-//            byte[] resizedThumbnail = os.toByteArray();
-//
-//            // 썸네일 업로드
-//            PutObjectRequest thumbRequest = PutObjectRequest.builder()
-//                    .bucket(bucketName)
-//                    .key(thumbnailKey)
-//                    .contentType("image/jpeg")
-//                    .build();
-//
-//            s3Client.putObject(thumbRequest, RequestBody.fromBytes(resizedThumbnail));
-//            log.info("[VIDEO-STORE] 썸네일 업로드 완료: key={}", thumbnailKey);
-//
-//            // 임시 파일 삭제
-//            tempVideoFile.delete();
-//            thumbnailFile.delete();
-
             String url = "https://" + cloudFrontDomain + "/" + videoKey;
             log.info("[VIDEO-STORE] 최종 URL 반환: {}", url);
 
@@ -173,23 +140,6 @@ public class FileManagingService {
             throw new RuntimeException("영상 업로드 실패", e);
         }
     }
-
-//    private void extractThumbnail(File videoFile, File thumbnailFile) throws IOException, InterruptedException {
-//        ProcessBuilder pb = new ProcessBuilder(
-//                "ffmpeg", "-y",
-//                "-i", videoFile.getAbsolutePath(),
-//                "-ss", "00:00:00",
-//                "-vframes", "1",
-//                "-vf", "scale=640:-1",
-//                thumbnailFile.getAbsolutePath()
-//        );
-//        Process process = pb.start();
-//        int exitCode = process.waitFor();
-//        if (exitCode != 0) {
-//            log.error("[VIDEO-THUMBNAIL] ffmpeg 실패 exitCode={}", exitCode);
-//            throw new RuntimeException("썸네일 추출 실패");
-//        }
-//    }
 
     public void deleteVideo(String fileUrl) {
         try {
