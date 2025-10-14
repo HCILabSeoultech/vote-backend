@@ -19,12 +19,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByParent_CommentIdOrderByCreatedAtAsc(Long parentId);
 
     //댓글 수 카운트
-    @Query(value = """
-        SELECT vote_id, COUNT(*) AS comment_count
-        FROM comment
-        WHERE parent_id IS NULL AND vote_id IN :voteIds
-        GROUP BY vote_id
-    """, nativeQuery = true)
+    @Query("""
+        select c.vote.voteId as voteId, count(c) as commentCount
+        from Comment c
+        where c.parent is null
+          and c.vote.voteId in :voteIds
+        group by c.vote.voteId
+    """)
     List<Object[]> countParentCommentsByVoteIds(@Param("voteIds") List<Long> voteIds);
 
 
