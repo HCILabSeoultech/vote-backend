@@ -23,7 +23,6 @@ import java.util.Map;
 public class VoteController {
 
     private final VoteService voteService;
-    private final UserService userService;
 
     // 투표 저장
     @PostMapping("/upload")
@@ -37,7 +36,7 @@ public class VoteController {
     }
 
 
-    // 투표 저장
+    // 투표 임시저장
     @PostMapping("/create")
     @Operation(summary = "투표 임시저장 API", description = "투표를 임시저장합니다.")
 
@@ -49,7 +48,7 @@ public class VoteController {
         return ResponseEntity.ok(new CreateVoteResponse("success", created.getVoteId()));
     }
 
-    // 투표 업로드
+    // 임시저장된 투표 업로드
     @PostMapping("/publish/{voteId}")
     @Operation(summary = "임시저장된 투표 업로드 API", description = "임시저장된 투표를 업로드합니다.")
     public ResponseEntity<?> publishVote(
