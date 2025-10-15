@@ -47,7 +47,14 @@ public enum ErrorCode {
     //Notification
     NOTIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "알림 전송에 실패했습니다."),
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 알림입니다."),
-    NOT_MY_NOTIFICATION(HttpStatus.BAD_REQUEST, "나의 알림이 아닙니다.");
+    NOT_MY_NOTIFICATION(HttpStatus.BAD_REQUEST, "나의 알림이 아닙니다."),
+
+    //FastApi
+    REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FastApi 요청에 실패했습니다."),
+    RESPONSE_HANDLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FastApi 응답 처리에 실패했습니다."),
+    HMAC_GENERATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "hmac 생성에 실패했습니다.");
+
+
 
     private final HttpStatus httpStatus;
     private final String description;
