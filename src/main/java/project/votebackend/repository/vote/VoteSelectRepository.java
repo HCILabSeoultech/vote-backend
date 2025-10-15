@@ -19,20 +19,21 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     Optional<VoteSelection> findByUserAndVote(User user, Vote vote);
 
     // 유저가 선택한 옵션 ID
-    @Query(value = "SELECT option_id FROM vote_selections WHERE vote_id = :voteId AND user_id = :userId", nativeQuery = true)
+    @Query("""
+        SELECT vs.option.optionId
+        FROM VoteSelection vs
+        WHERE vs.vote.voteId = :voteId
+          AND vs.user.userId = :userId
+    """)
     Optional<Long> findOptionIdByVoteIdAndUserId(@Param("voteId") Long voteId, @Param("userId") Long userId);
 
-    // 유저가 참여한 투표 수
-    @Query("SELECT COUNT(vs) FROM VoteSelection vs WHERE vs.user.userId = :userId")
-    Long countByUserId(@Param("userId") Long userId);
-
     // 옵션 수 카운트
-    @Query(value = """
-        SELECT vs.option_id, COUNT(*) AS vote_count
-        FROM vote_selections vs
-        WHERE vs.vote_id IN :voteIds
-        GROUP BY vs.option_id
-    """, nativeQuery = true)
+    @Query("""
+        SELECT vs.option.optionId, COUNT(vs)
+        FROM VoteSelection vs
+        WHERE vs.vote.voteId IN :voteIds
+        GROUP BY vs.option.optionId
+    """)
     List<Object[]> findOptionVoteCounts(@Param("voteIds") List<Long> voteIds);
 
     // 성별 기준 분석 최적화
@@ -72,25 +73,4 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
 
     void deleteByVote_VoteId(Long voteId);
-
-    // 평균 투표 수 계산
-    @Query("SELECT vs.vote.voteId, COUNT(vs) FROM VoteSelection vs WHERE vs.vote.voteId IN :voteIds GROUP BY vs.vote.voteId")
-    List<Object[]> countRawByVoteIdsGrouped(@Param("voteIds") List<Long> voteIds);
-
-    default Map<Long, Long> countByVoteIdsGroupedIncludingZero(List<Long> voteIds) {
-        List<Object[]> raw = countRawByVoteIdsGrouped(voteIds);
-        Map<Long, Long> resultMap = new HashMap<>();
-
-        // 0으로 초기화
-        for (Long voteId : voteIds) {
-            resultMap.put(voteId, 0L);
-        }
-
-        // 참여자 수가 있는 경우 덮어쓰기
-        for (Object[] row : raw) {
-            resultMap.put((Long) row[0], (Long) row[1]);
-        }
-
-        return resultMap;
-    }
 }

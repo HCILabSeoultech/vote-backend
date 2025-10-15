@@ -23,29 +23,19 @@ public class VoteResultService {
             "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도", "제주특별자치도"
     );
 
-    /**
-     * 성별 기준 통계 조회
-     *
-     * @param voteId 투표 ID
-     * @return Map<성별, 옵션별 통계>
-     */
+    // 성별 기준 통계 조회
     public Map<String, VoteResultStatisticsDto> getGenderStats(Long voteId) {
         List<Object[]> data = voteSelectionsRepository.findGenderStatistics(voteId);
         return groupByCategory(data); // 성별은 그대로 사용 가능
     }
 
-    /**
-     * 연령대 기준 통계 조회
-     *
-     * @param voteId 투표 ID
-     * @return Map<연령대, 옵션별 통계>
-     */
+    // 연령대 기준 통계 조회
     public Map<String, VoteResultStatisticsDto> getAgeStats(Long voteId) {
         List<Object[]> data = voteSelectionsRepository.findAgeStatistics(voteId);
         Map<String, VoteResultStatisticsDto> result = new HashMap<>();
 
         for (Object[] row : data) {
-            BigDecimal ageGroupDecimal = (BigDecimal) row[0]; // ex: 10, 20, 30 → 연령대 직접 받아옴
+            BigDecimal ageGroupDecimal = (BigDecimal) row[0]; // ex: 10, 20, 30
             int ageGroupInt = ageGroupDecimal.intValue();
             String option = (String) row[1];
             Long count = (Long) row[2];
@@ -59,12 +49,7 @@ public class VoteResultService {
         return result;
     }
 
-    /**
-     * 지역 기준 통계 조회
-     *
-     * @param voteId 투표 ID
-     * @return Map<지역명, 옵션별 통계>
-     */
+    // 지역 기준 통계 조회
     public Map<String, VoteResultStatisticsDto> getRegionStats(Long voteId) {
         List<Object[]> data = voteSelectionsRepository.findRegionStatistics(voteId);
         Map<String, VoteResultStatisticsDto> result = new HashMap<>();
@@ -83,10 +68,7 @@ public class VoteResultService {
         return result;
     }
 
-    /**
-     * 생년월일 → 연령대 문자열로 변환
-     * @return 연령대 문자열
-     */
+    // 생년월일 → 연령대 문자열로 변환
     private String formatAgeGroup(Integer group) {
         if (group == null) return "기타";
         if (group < 10) return "10대 미만";
@@ -97,12 +79,7 @@ public class VoteResultService {
         return "50대 이상";
     }
 
-    /**
-     * 주소에서 시/도명 추출
-     *
-     * @param address 유저 주소
-     * @return 시/도 또는 "기타"
-     */
+    // 주소에서 시/도명 추출
     private String extractRegion(String address) {
         return koreanRegions.stream()
                 .filter(address::startsWith)
@@ -110,12 +87,7 @@ public class VoteResultService {
                 .orElse("기타");
     }
 
-    /**
-     * 공통 분류 메서드: 성별/기타 항목을 기준으로 옵션별 카운트 누적
-     *
-     * @param data Object[] = [기준값, 옵션명]
-     * @return Map<기준값, 옵션별 통계>
-     */
+    // 성별/기타 항목을 기준으로 옵션별 카운트 누적
     private Map<String, VoteResultStatisticsDto> groupByCategory(List<Object[]> data) {
         Map<String, VoteResultStatisticsDto> result = new HashMap<>();
         for (Object[] row : data) {
