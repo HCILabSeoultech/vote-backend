@@ -17,9 +17,11 @@ import project.votebackend.domain.article.Cluster;
 import project.votebackend.dto.article.IngestArticleDto;
 import project.votebackend.dto.article.IngestClusterNode;
 import project.votebackend.dto.article.IngestPayload;
+import project.votebackend.exception.FastApiException;
 import project.votebackend.repository.article.ArticleRepository;
 import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.type.Category;
+import project.votebackend.type.ErrorCode;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -73,10 +75,9 @@ public class ClusterIngestService {
             ResponseEntity<IngestPayload> res = restTemplate.exchange(req, IngestPayload.class);
             return res.getBody();
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException("FastAPI 호출 실패: " + e.getRawStatusCode()
-                    + " " + e.getResponseBodyAsString(), e);
+            throw new FastApiException(ErrorCode.REQUEST_FAILED);
         } catch (ResourceAccessException e) {
-            throw new IllegalStateException("FastAPI 네트워크 오류", e);
+            throw new FastApiException(ErrorCode.RESPONSE_HANDLING_FAILED);
         }
     }
 
@@ -95,7 +96,7 @@ public class ClusterIngestService {
             byte[] raw = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(raw);
         } catch (Exception e) {
-            throw new IllegalStateException("HMAC 생성 실패", e);
+            throw new FastApiException(ErrorCode.HMAC_GENERATE_FAILED);
         }
     }
 

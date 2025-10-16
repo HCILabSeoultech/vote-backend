@@ -92,6 +92,16 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getErrorCode(), e.getErrorMessage()));
     }
 
+    // FastApi 예외 처리 - FastAPI 관련 예외 발생 시 실행됨
+    @ExceptionHandler(FastApiException.class)
+    public ResponseEntity<ErrorResponse> handleFastApiException(FastApiException e) {
+        log.error("{}", e.getErrorCode());
+
+        return ResponseEntity
+                .status(e.getErrorCode().getHttpStatus())
+                .body(new ErrorResponse(e.getErrorCode(), e.getErrorMessage()));
+    }
+
     // 기타 모든 예외 처리 - 명시되지 않은 예외 발생 시 실행됨
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
