@@ -28,89 +28,60 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     //작성한 글 + 내가 선택글 관심사 + 팔로우한 사람의 글
     @Query(value = """
     WITH base AS (
-      SELECT v.*
-        FROM vote v
-       WHERE v.status = 'PUBLISHED'
-         -- 종료된 투표 제외: finish_time 컬럼 가정 (없으면 상태값으로 대체)
-         AND (v.finish_time IS NULL OR v.finish_time > NOW())
-         AND v.user_id <> :aiUserId
-         -- 내가 이미 참여한 투표 제외: 참여 테이블/컬럼명에 맞게 수정
-         AND NOT EXISTS (
-               SELECT 1
-                 FROM vote_selections s
-                WHERE s.vote_id = v.vote_id
-                  AND s.user_id = :userId
-             )
-    )
-    SELECT *
+          SELECT v.*,
+                 -- 아직 마감 안 됨
+                 (v.finish_time IS NULL OR v.finish_time > NOW()) AS is_open,
+                 -- 내가 이미 참여했는지
+                 EXISTS (
+                   SELECT 1
+                   FROM vote_selections s
+                   WHERE s.vote_id = v.vote_id
+                     AND s.user_id = :userId
+                 ) AS participated
+          FROM vote v
+          WHERE v.status = 'PUBLISHED'
+            AND (v.finish_time IS NULL OR v.finish_time > NOW())
+            AND v.user_id <> :aiUserId
+        ),
+        base_scored AS (
+          SELECT b.*,
+                 CASE
+                   WHEN b.is_open AND NOT b.participated THEN 2  -- 최우선: 미참여 & 진행중
+                   WHEN b.is_open AND b.participated     THEN 1  -- 차선: 참여 & 진행중
+                   ELSE 0
+                 END AS pr
+          FROM base b
+        )
+        SELECT *
         FROM (
-             -- 내가 작성한 글 
-             SELECT * FROM base WHERE user_id = :userId
-     
-             UNION
-     
-             -- 내가 관심 설정한 카테고리의 글 
-             SELECT * FROM base WHERE category_id IN (:categoryIds)                                                                                                  
-     
-             UNION
-     
-             -- 내가 팔로우한 사람
-            SELECT b.*
-              FROM base b
-             WHERE b.user_id IN (
-                   SELECT f.following_id
-                     FROM follow f
-                    WHERE f.follower_id = :userId
-             )
-       ) t
-     ORDER BY t.created_at DESC
-     LIMIT :limit OFFSET :offset
+          -- 내가 작성한 글
+          SELECT * FROM base_scored WHERE user_id = :userId
+        
+          UNION
+        
+          -- 관심 카테고리
+          SELECT * FROM base_scored WHERE category_id IN (:categoryIds)
+        
+          UNION
+        
+          -- 팔로우한 사람
+          SELECT bs.*
+          FROM base_scored bs
+          WHERE bs.user_id IN (
+            SELECT f.following_id
+            FROM follow f
+            WHERE f.follower_id = :userId
+          )
+        ) t
+        -- 우선순위 먼저, 최신순 보조
+        ORDER BY t.pr DESC, t.created_at DESC, t.vote_id DESC
+        LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
     List<Vote> findMainPageVotesUnion(
             @Param("userId") Long userId,
             @Param("categoryIds") List<Long> categoryIds,
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("aiUserId") Long aiUserId
-    );
-
-    //메인페이지 글 개수 count
-    @Query(value = """
-    WITH base AS (
-      SELECT v.*
-        FROM vote v
-       WHERE v.status = 'PUBLISHED'
-         AND (v.finish_time IS NULL OR v.finish_time > NOW())
-         AND v.user_id <> :aiUserId
-         AND NOT EXISTS (
-               SELECT 1
-                 FROM vote_selections s
-                WHERE s.vote_id = v.vote_id
-                  AND s.user_id = :userId
-             )
-    )
-    SELECT COUNT(*) 
-      FROM (
-            SELECT vote_id FROM base WHERE user_id = :userId
-    
-            UNION
-    
-            SELECT vote_id FROM base WHERE category_id IN (:categoryIds)
-    
-            UNION
-    
-            SELECT b.vote_id
-              FROM base b
-             WHERE b.user_id IN (
-                   SELECT f.following_id
-                     FROM follow f
-                    WHERE f.follower_id = :userId
-             )
-      ) count_table
-    """, nativeQuery = true)
-    long countMainPageVotes(
-            @Param("userId") Long userId,
-            @Param("categoryIds") List<Long> categoryIds,
             @Param("aiUserId") Long aiUserId
     );
 
@@ -143,23 +114,24 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     // 인기 후보
     @Query("""
-        SELECT v
-        FROM Vote v
-        LEFT JOIN v.selections s
-        WHERE v.status = 'PUBLISHED'
-          AND (v.finishTime IS NULL OR v.finishTime > CURRENT_TIMESTAMP)
-          AND NOT EXISTS (
+      SELECT v
+      FROM Vote v
+      WHERE v.status = 'PUBLISHED'
+        AND (v.finishTime IS NULL OR v.finishTime > CURRENT_TIMESTAMP)
+      ORDER BY
+        CASE
+          WHEN NOT EXISTS (
             SELECT 1 FROM VoteSelection vs
-            WHERE vs.vote = v
-              AND vs.user.userId = :userId
-          )
-        ORDER BY (
-          SELECT COUNT(s2)
-          FROM VoteSelection s2
-          WHERE s2.vote = v
-        ) DESC,
-        v.createdAt DESC,
-        v.voteId DESC
+            WHERE vs.vote = v AND vs.user.userId = :userId
+          ) THEN 2
+          WHEN EXISTS (
+            SELECT 1 FROM VoteSelection vs2
+            WHERE vs2.vote = v AND vs2.user.userId = :userId
+          ) THEN 1
+          ELSE 0
+        END DESC,
+        (SELECT COUNT(s2) FROM VoteSelection s2 WHERE s2.vote = v) DESC,
+        v.createdAt DESC, v.voteId DESC
     """)
     List<Vote> findPopularCandidatesGlobal(
             @Param("userId") Long userId,
