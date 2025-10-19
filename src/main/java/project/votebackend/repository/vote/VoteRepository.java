@@ -28,54 +28,45 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     //작성한 글 + 내가 선택글 관심사 + 팔로우한 사람의 글
     @Query(value = """
     WITH base AS (
-          SELECT v.*,
-                 -- 아직 마감 안 됨
-                 (v.finish_time IS NULL OR v.finish_time > NOW()) AS is_open,
-                 -- 내가 이미 참여했는지
-                 EXISTS (
-                   SELECT 1
-                   FROM vote_selections s
-                   WHERE s.vote_id = v.vote_id
-                     AND s.user_id = :userId
-                 ) AS participated
-          FROM vote v
-          WHERE v.status = 'PUBLISHED'
-            AND (v.finish_time IS NULL OR v.finish_time > NOW())
-            AND v.user_id <> :aiUserId
-        ),
-        base_scored AS (
-          SELECT b.*,
-                 CASE
-                   WHEN b.is_open AND NOT b.participated THEN 2  -- 최우선: 미참여 & 진행중
-                   WHEN b.is_open AND b.participated     THEN 1  -- 차선: 참여 & 진행중
-                   ELSE 0
-                 END AS pr
-          FROM base b
-        )
-        SELECT *
-        FROM (
-          -- 내가 작성한 글
-          SELECT * FROM base_scored WHERE user_id = :userId
-        
-          UNION
-        
-          -- 관심 카테고리
-          SELECT * FROM base_scored WHERE category_id IN (:categoryIds)
-        
-          UNION
-        
-          -- 팔로우한 사람
-          SELECT bs.*
-          FROM base_scored bs
+      SELECT v.*,
+             (v.finish_time IS NULL OR v.finish_time > NOW()) AS is_open,
+             EXISTS (
+               SELECT 1 FROM vote_selections s
+               WHERE s.vote_id = v.vote_id
+                 AND s.user_id = :userId
+             ) AS participated
+      FROM vote v
+      WHERE v.status = 'PUBLISHED'
+        AND (v.finish_time IS NULL OR v.finish_time > NOW())
+        AND v.user_id <> :aiUserId
+    ),
+    base_scored AS (
+      SELECT b.*,
+             CASE
+               WHEN b.is_open AND NOT b.participated THEN 2  -- 미참여 진행중
+               WHEN b.is_open AND b.participated     THEN 1  -- 참여 진행중
+               ELSE 0
+             END AS pr
+      FROM base b
+    )
+    SELECT *
+    FROM (
+         -- 내가 작성
+         SELECT * FROM base_scored WHERE user_id = :userId
+         UNION
+         -- 관심 카테고리
+         SELECT * FROM base_scored WHERE category_id IN (:categoryIds)
+         UNION
+         -- 팔로우
+         SELECT bs.* FROM base_scored bs
           WHERE bs.user_id IN (
             SELECT f.following_id
             FROM follow f
             WHERE f.follower_id = :userId
           )
-        ) t
-        -- 우선순위 먼저, 최신순 보조
-        ORDER BY t.pr DESC, t.created_at DESC, t.vote_id DESC
-        LIMIT :limit OFFSET :offset
+    ) t
+    ORDER BY t.pr DESC, t.created_at DESC, t.vote_id DESC
+    LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
     List<Vote> findMainPageVotesUnion(
             @Param("userId") Long userId,

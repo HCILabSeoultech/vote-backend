@@ -8,10 +8,7 @@ import project.votebackend.domain.user.User;
 import project.votebackend.domain.vote.Vote;
 import project.votebackend.domain.vote.VoteSelection;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long> {
@@ -73,4 +70,12 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     List<Object[]> findRegionStatistics(@Param("voteId") Long voteId);
 
     void deleteByVote_VoteId(Long voteId);
+
+    @Query("""
+      select s.vote.voteId
+      from VoteSelection s
+      where s.user.userId = :userId and s.vote.voteId in :voteIds
+    """)
+    Set<Long> findParticipatedVoteIds(@Param("userId") Long userId,
+                                      @Param("voteIds") Collection<Long> voteIds);
 }
