@@ -31,10 +31,11 @@ public class VoteLoadController {
     public ResponseEntity<Map<String, Object>> loadMainPageVotes(
             @AuthenticationPrincipal CustumUserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(name = "mixSalt", required = false) String mixSalt
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<LoadVoteDto> votePage = voteLoadService.getMainPageVotes(userDetails.getId(), pageable);
+        Page<LoadVoteDto> votePage = voteLoadService.getMainPageVotes(userDetails.getId(), pageable, mixSalt);
         return ResponseEntity.ok(PageResponseUtil.toResponse(votePage));
     }
 
