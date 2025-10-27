@@ -15,6 +15,7 @@ import project.votebackend.exception.ClusterException;
 import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.repository.news.NewsSearchRepository;
 import project.votebackend.repository.user.UserRepository;
+import project.votebackend.repository.vote.VoteQueryRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.type.Category;
 import project.votebackend.type.ErrorCode;
@@ -25,20 +26,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SearchService {
 
-    private final VoteRepository voteRepository;
     private final ClusterRepository clusterRepository;
     private final NewsSearchRepository newsSearchRepository;
     private final UserRepository userRepository;
+    private final VoteQueryRepository voteQueryRepository;
 
     public Page<VoteSearchResponse> searchVotes(String keyword, Pageable pageable) {
-        Page<Object[]> page = voteRepository.searchVotesWithStats(keyword, pageable);
-        return page.map(row -> new VoteSearchResponse(
-                ((Number) row[0]).longValue(),  // vote_id
-                (String) row[1],                // title
-                ((Number) row[2]).intValue(),   // participant_count
-                ((Number) row[3]).intValue(),   // like_count
-                ((Number) row[4]).intValue()    // comment_count
-        ));
+        return voteQueryRepository.searchVotes(keyword, pageable);
     }
 
     public Page<ClusterSummaryDto> searchNews(String keyword, Pageable pageable, Long userId) {
