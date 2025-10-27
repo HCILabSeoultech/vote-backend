@@ -8,7 +8,7 @@ import lombok.Getter;
 public class VoteSearchResponse {
     private Long id;
     private String title;
-    private int totalVotes;
-    private int likeCount;
-    private int commentCount;
+    private long totalVotes;
+    private long likeCount;
+    private long commentCount;
 }
