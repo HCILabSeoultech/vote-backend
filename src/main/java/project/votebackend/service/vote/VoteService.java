@@ -73,13 +73,13 @@ public class VoteService {
 
 
         // 옵션 추가
-        List<VoteOption> options = request.getOptions().stream().map(opt -> {
+        Set<VoteOption> options = request.getOptions().stream().map(opt -> {
             VoteOption o = new VoteOption();
             o.setVote(vote);
             o.setOption(opt.getContent());
             o.setOptionImage(opt.getOptionImage());
             return o;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
 
         vote.setOptions(options);
 
@@ -130,13 +130,13 @@ public class VoteService {
 
 
         // 옵션 추가
-        List<VoteOption> options = request.getOptions().stream().map(opt -> {
+        Set<VoteOption> options = request.getOptions().stream().map(opt -> {
             VoteOption o = new VoteOption();
             o.setVote(vote);
             o.setOption(opt.getContent());
             o.setOptionImage(opt.getOptionImage());
             return o;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
 
         vote.setOptions(options);
 
