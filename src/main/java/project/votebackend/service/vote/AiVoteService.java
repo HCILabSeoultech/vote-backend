@@ -111,7 +111,7 @@ public class AiVoteService {
 
         // 이미지
         if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
-            if (vote.getImages() == null) vote.setImages(new ArrayList<>());
+            if (vote.getImages() == null) vote.setImages(new HashSet<>());
             req.getImageUrls().forEach(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
