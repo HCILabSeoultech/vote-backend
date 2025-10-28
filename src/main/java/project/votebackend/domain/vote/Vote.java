@@ -53,11 +53,11 @@ public class Vote extends BaseEntity {
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    private Set<VoteOption> options = new HashSet<>();
+    private List<VoteOption> options = new ArrayList<>();
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    private Set<VoteImage> images = new HashSet<>();
+    private List<VoteImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
