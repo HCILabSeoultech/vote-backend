@@ -100,7 +100,7 @@ public class AiVoteService {
         vote.setCategory(category);
 
         // 옵션
-        if (vote.getOptions() == null) vote.setOptions(new HashSet<>());
+        if (vote.getOptions() == null) vote.setOptions(new ArrayList<>());
         for (VoteOptionDto od : optionDtos) {
             VoteOption o = new VoteOption();
             o.setVote(vote);
