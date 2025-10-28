@@ -85,12 +85,12 @@ public class VoteService {
 
         // 이미지 추가
         if (request.getImageUrls() != null) {
-            List<VoteImage> images = request.getImageUrls().stream().map(url -> {
+            Set<VoteImage> images = request.getImageUrls().stream().map(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
                 img.setImageUrl(url);
                 return img;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toSet());
             vote.setImages(images);
         }
 
@@ -142,12 +142,12 @@ public class VoteService {
 
         // 이미지 추가
         if (request.getImageUrls() != null) {
-            List<VoteImage> images = request.getImageUrls().stream().map(url -> {
+            Set<VoteImage> images = request.getImageUrls().stream().map(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
                 img.setImageUrl(url);
                 return img;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toSet());
             vote.setImages(images);
         }
 
