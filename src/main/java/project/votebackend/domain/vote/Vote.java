@@ -53,7 +53,7 @@ public class Vote extends BaseEntity {
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    private List<VoteOption> options = new ArrayList<>();
+    private Set<VoteOption> options = new HashSet<>();
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
@@ -61,11 +61,11 @@ public class Vote extends BaseEntity {
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    private Set<VoteSelection> selections = new HashSet<>();
+    private List<VoteSelection> selections = new ArrayList<>();
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    private Set<Reaction> reactions = new HashSet<>();
+    private List<Reaction> reactions = new ArrayList<>();
 
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 50)
