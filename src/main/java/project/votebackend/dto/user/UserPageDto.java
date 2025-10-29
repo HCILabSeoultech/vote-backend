@@ -14,7 +14,6 @@ public class UserPageDto {
 
     private String name;
     private String profileImage;
-    private String address;
     private Long followerCount;
     private Long followingCount;
     private MypageStat mypageStat;
