@@ -23,7 +23,6 @@ import project.votebackend.repository.user.UserInterestRepository;
 import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.user.UserStatDao;
 import project.votebackend.repository.vote.VoteRepository;
-import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ErrorCode;
 import project.votebackend.type.VoteStatus;
 
@@ -40,7 +39,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final FollowRepository followRepository;
-    private final VoteSelectRepository voteSelectRepository;
     private final UserInterestRepository userInterestRepository;
     private final CategoryRepository categoryRepository;
     private final UserStatDao userStatDao;
@@ -93,7 +91,6 @@ public class UserService {
         return UserPageDto.builder()
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .address(user.getAddress())
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .mypageStat(mypageStat)
@@ -126,15 +123,52 @@ public class UserService {
         Long followerCount = followRepository.countByFollowing(user);
         Long followingCount = followRepository.countByFollower(user);
 
+        // 나의 표 계산
+        // 1) 월별 6달
+        List<Object[]> rows = userStatDao.findMonthlyReceivedVotes6(userId);
+        List<MonthlyStat> monthly = new ArrayList<>(rows.size());
+        for (Object[] r : rows) {
+            String ymStr = (String) r[0];                 // "YYYY-MM"
+            long cnt     = ((Number) r[1]).longValue();
+            YearMonth ym = YearMonth.parse(ymStr);        // 바로 파싱
+            monthly.add(new MonthlyStat(ym, cnt));
+        }
+
+        // 2) 총합/개월수
+        long total  = userStatDao.findTotalReceivedVotes(userId);
+        int months  = userStatDao.findMonthsSinceSignup(userId);
+
+        // 3) 이번 달 받은 투표 수
+        long currentMonth = userStatDao.findCurrentMonthReceivedVotes(userId);
+
+        // 4) 이번 달 제외 지표 계산
+        long totalExclThis = total - currentMonth;
+        int monthsExclThis = Math.max(months - 1, 0);
+
+        BigDecimal avgExcl = monthsExclThis > 0
+                ? BigDecimal.valueOf(totalExclThis)
+                .divide(BigDecimal.valueOf(monthsExclThis), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        // 5) 등급 계산
+        LevelInfo levelInfo = mapToLevel(avgExcl);
+
+        MypageStat mypageStat = MypageStat.builder()
+                .monthly(monthly)
+                .total(total)
+                .months(months)
+                .build();
+
         // 6. 사용자 페이지 DTO 반환
         return OtherUserPageDto.builder()
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
-                .address(user.getAddress())
                 .posts(voteDto)
                 .postCount(postCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .mypageStat(mypageStat)
+                .levelInfo(levelInfo)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
