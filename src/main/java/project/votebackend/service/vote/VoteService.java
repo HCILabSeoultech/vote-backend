@@ -73,24 +73,24 @@ public class VoteService {
 
 
         // 옵션 추가
-        Set<VoteOption> options = request.getOptions().stream().map(opt -> {
+        List<VoteOption> options = request.getOptions().stream().map(opt -> {
             VoteOption o = new VoteOption();
             o.setVote(vote);
             o.setOption(opt.getContent());
             o.setOptionImage(opt.getOptionImage());
             return o;
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toList());
 
         vote.setOptions(options);
 
         // 이미지 추가
         if (request.getImageUrls() != null) {
-            Set<VoteImage> images = request.getImageUrls().stream().map(url -> {
+            List<VoteImage> images = request.getImageUrls().stream().map(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
                 img.setImageUrl(url);
                 return img;
-            }).collect(Collectors.toSet());
+            }).collect(Collectors.toList());
             vote.setImages(images);
         }
 
@@ -130,24 +130,24 @@ public class VoteService {
 
 
         // 옵션 추가
-        Set<VoteOption> options = request.getOptions().stream().map(opt -> {
+        List<VoteOption> options = request.getOptions().stream().map(opt -> {
             VoteOption o = new VoteOption();
             o.setVote(vote);
             o.setOption(opt.getContent());
             o.setOptionImage(opt.getOptionImage());
             return o;
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toList());
 
         vote.setOptions(options);
 
         // 이미지 추가
         if (request.getImageUrls() != null) {
-            Set<VoteImage> images = request.getImageUrls().stream().map(url -> {
+            List<VoteImage> images = request.getImageUrls().stream().map(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
                 img.setImageUrl(url);
                 return img;
-            }).collect(Collectors.toSet());
+            }).collect(Collectors.toList());
             vote.setImages(images);
         }
 

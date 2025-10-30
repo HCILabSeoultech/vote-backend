@@ -100,7 +100,7 @@ public class AiVoteService {
         vote.setCategory(category);
 
         // 옵션
-        if (vote.getOptions() == null) vote.setOptions(new HashSet<>());
+        if (vote.getOptions() == null) vote.setOptions(new ArrayList<>());
         for (VoteOptionDto od : optionDtos) {
             VoteOption o = new VoteOption();
             o.setVote(vote);
@@ -111,7 +111,7 @@ public class AiVoteService {
 
         // 이미지
         if (req.getImageUrls() != null && !req.getImageUrls().isEmpty()) {
-            if (vote.getImages() == null) vote.setImages(new HashSet<>());
+            if (vote.getImages() == null) vote.setImages(new ArrayList<>());
             req.getImageUrls().forEach(url -> {
                 VoteImage img = new VoteImage();
                 img.setVote(vote);
