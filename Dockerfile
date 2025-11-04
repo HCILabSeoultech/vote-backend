@@ -1,5 +1,5 @@
 # vote-backend/Dockerfile
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jdk-jammy
 LABEL authors="kohuijae"
 
 WORKDIR /app
