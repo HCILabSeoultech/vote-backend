@@ -133,4 +133,32 @@ public class AuthService {
 
         return new LoginResponse("success", accessToken);
     }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND));
+
+        user.getComments().forEach(c -> c.setUser(null));
+        user.getCommentLikes().forEach(cl -> cl.setUser(null));
+        user.getReactions().forEach(r -> r.setUser(null));
+        user.getVotes().forEach(v -> v.setUser(null));
+        user.getFollowingList().forEach(f -> f.setFollower(null));
+        user.getFollowerList().forEach(f -> f.setFollowing(null));
+        user.getNewsBookmarks().forEach(nb -> nb.setUser(null));
+        user.getNewsSearches().forEach(ns -> ns.setUser(null));
+        user.getVoteSelections().forEach(vs -> vs.setUser(null));
+
+        user.getComments().clear();
+        user.getCommentLikes().clear();
+        user.getReactions().clear();
+        user.getVotes().clear();
+        user.getFollowingList().clear();
+        user.getFollowerList().clear();
+        user.getNewsBookmarks().clear();
+        user.getNewsSearches().clear();
+        user.getVoteSelections().clear();
+
+        userRepository.deleteById(userId);
+    }
 }
