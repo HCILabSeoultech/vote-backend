@@ -13,6 +13,7 @@ public enum ErrorCode {
     ALREADY_EXIST_PHONE(HttpStatus.CONFLICT, "이미 존재하는 전화번호입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"내부 서버 오류 발생"),
     USERNAME_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 아이디입니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."),
     PASSWORD_NOT_MATCHED(HttpStatus.CONFLICT, "비밀번호가 일치하지 않습니다."),
     USER_NOT_MATCHED(HttpStatus.CONFLICT, "유저가 일치하지 않습니다."),
     GOOGLE_CREDENTIAL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "GoogleCredentials 초기화에 실패했습니다."),

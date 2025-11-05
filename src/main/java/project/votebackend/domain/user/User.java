@@ -2,7 +2,16 @@ package project.votebackend.domain.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import project.votebackend.domain.BaseEntity;
+import project.votebackend.domain.comment.Comment;
+import project.votebackend.domain.comment.CommentLike;
+import project.votebackend.domain.follow.Follow;
+import project.votebackend.domain.reaction.NewsBookmark;
+import project.votebackend.domain.reaction.Reaction;
+import project.votebackend.domain.search.NewsSearch;
+import project.votebackend.domain.vote.Vote;
+import project.votebackend.domain.vote.VoteSelection;
 import project.votebackend.type.Gender;
 import project.votebackend.type.Grade;
 
@@ -63,6 +72,42 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private boolean draftHelpVersionSeen = false;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     private List<UserInterest> userInterests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<Vote> votes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<CommentLike> commentLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<Reaction> reactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<Follow> followingList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "following", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<Follow> followerList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<NewsBookmark> newsBookmarks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<NewsSearch> newsSearches = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    @BatchSize(size = 50)
+    private List<VoteSelection> voteSelections = new ArrayList<>();
 }

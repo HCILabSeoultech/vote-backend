@@ -37,7 +37,6 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
 
-
     // 회원가입
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원 가입 API, Token 을 발급합니다.")
@@ -140,6 +139,23 @@ public class AuthController {
         response.addHeader("Set-Cookie", expiredCookie.toString());
 
         return ResponseEntity.ok().build();
+    }
+
+    // 회원탈퇴
+    @DeleteMapping("/withdraw")
+    @Operation(summary = "회원탈퇴 API", description = "사용자 계정을 영구적으로 삭제합니다.")
+    public ResponseEntity<?> withdraw(@AuthenticationPrincipal CustumUserDetails user, HttpServletResponse response) {
+        redisTemplate.delete("RT:" + user.getId());
+
+        authService.deleteUser(user.getId());
+
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .build();
+        response.addHeader("Set-Cookie", expiredCookie.toString());
+
+        return ResponseEntity.ok("회원탈퇴가 완료되었습니다.");
     }
 }
 
