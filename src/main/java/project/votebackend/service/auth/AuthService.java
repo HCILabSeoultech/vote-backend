@@ -47,10 +47,6 @@ public class AuthService {
             throw new AuthException(ErrorCode.ALREADY_EXIST_NAME);
         }
 
-        if (userRepository.findByPhone(dto.getPhone()).isPresent()) {
-            throw new AuthException(ErrorCode.ALREADY_EXIST_PHONE);
-        }
-
         User user = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword())) // 비밀번호 암호화
