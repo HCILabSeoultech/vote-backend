@@ -12,6 +12,7 @@ import project.votebackend.dto.search.SearchDto;
 import project.votebackend.dto.vote.VoteSearchResponse;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.ClusterException;
+import project.votebackend.repository.article.ClusterQueryRepository;
 import project.votebackend.repository.article.ClusterRepository;
 import project.votebackend.repository.news.NewsSearchRepository;
 import project.votebackend.repository.user.UserRepository;
@@ -26,10 +27,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SearchService {
 
-    private final ClusterRepository clusterRepository;
     private final NewsSearchRepository newsSearchRepository;
     private final UserRepository userRepository;
     private final VoteQueryRepository voteQueryRepository;
+    private final ClusterQueryRepository clusterQueryRepository;
 
     public Page<VoteSearchResponse> searchVotes(String keyword, Pageable pageable) {
         return voteQueryRepository.searchVotes(keyword, pageable);
@@ -39,6 +40,7 @@ public class SearchService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
+        // 검색 키워드 저장
         newsSearchRepository.save(
                 NewsSearch.builder()
                         .user(user)
@@ -46,15 +48,7 @@ public class SearchService {
                         .build()
         );
 
-        Page<Object[]> page = clusterRepository.searchClusterSummaries(keyword, pageable);
-
-        return page.map(row -> new ClusterSummaryDto(
-                ((Number) row[0]).longValue(),                 // cluster_id → id
-                (String) row[1],                               // image_url → imageUrl
-                (String) row[2],                               // title
-                ((java.sql.Timestamp) row[3]).toLocalDateTime(),// created_at → createdAt
-                Category.valueOf((String) row[4])
-        ));
+        return clusterQueryRepository.searchClusterSummaries(keyword, pageable);
     }
 
     @Transactional

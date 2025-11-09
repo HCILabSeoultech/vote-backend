@@ -20,24 +20,6 @@ public interface ClusterRepository extends JpaRepository<Cluster, Long> {
     Optional<Cluster> findByTitle(String title);
     Page<Cluster> findByCategory(Category category, Pageable pageable);
 
-    @Query(value = """
-        SELECT 
-          c.cluster_id,
-          c.image_url,
-          c.title,
-          c.created_at
-        FROM cluster c
-        WHERE c.title ILIKE CONCAT('%', :keyword, '%')
-        ORDER BY c.created_at DESC
-        """,
-                countQuery = """
-        SELECT COUNT(*)
-        FROM cluster c
-        WHERE c.title ILIKE CONCAT('%', :keyword, '%')
-        """,
-            nativeQuery = true)
-    Page<Object[]> searchClusterSummaries(@Param("keyword") String keyword, Pageable pageable);
-
     @Query("""
        select c.id from Cluster c
        where c.createdAt < :cutoff
