@@ -20,6 +20,7 @@ public class VoteSummaryDto {
     private String thumbnailImageUrl;
     private int totalVotes;              // 누적 투표 수
     private LocalDateTime finishTime;
+    private int version;
 
     // 투표에 등록된 첫 이미지 썸네일 반환
     private static String extractThumbnail(Vote vote) {
@@ -46,6 +47,7 @@ public class VoteSummaryDto {
                 .finishTime(vote.getFinishTime())
                 .thumbnailImageUrl(VoteSummaryDto.extractThumbnail(vote))
                 .totalVotes(vote.getSelections().size())
+                .version(vote.getVersion())
                 .build();
     }
 }
