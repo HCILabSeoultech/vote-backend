@@ -186,9 +186,9 @@ public class VoteService {
         newVote.setVoteType(original.getVoteType());
         newVote.setFinishTime(newFinishTime);
         newVote.setStatus(VoteStatus.PUBLISHED);
+        newVote.setVersion(newVote.getVersion() == null ? 2 : original.getVersion() + 1);
         voteRepository.save(newVote);
 
-        // 옵션 복사
         List<VoteOption> newOptions = original.getOptions().stream()
                 .map(opt -> {
                     VoteOption newOpt = new VoteOption();
@@ -198,15 +198,22 @@ public class VoteService {
                     return newOpt;
                 })
                 .collect(Collectors.toList());
-        voteOptionRepository.saveAll(newOptions);
+        newVote.setOptions(newOptions);
 
-        // 이미지 복사
         if (original.getImages() != null) {
             List<VoteImage> newImages = original.getImages().stream()
-                    .map((VoteImage img) -> new VoteImage(img.getImageUrl(), newVote))
+                    .map(img -> {
+                        VoteImage newImg = new VoteImage();
+                        newImg.setVote(newVote);
+                        newImg.setImageUrl(img.getImageUrl());
+                        return newImg;
+                    })
                     .collect(Collectors.toList());
-            voteImageRepository.saveAll(newImages);
+            newVote.setImages(newImages);
         }
+
+        voteRepository.save(newVote);
+
         return newVote.getVoteId();
     }
 

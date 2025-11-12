@@ -42,6 +42,9 @@ public class Vote extends BaseEntity {
     private String link;
     private LocalDateTime finishTime;
 
+    @Builder.Default
+    private Integer version = 1;
+
     @Enumerated(EnumType.STRING)
     private VoteStatus status;
 
