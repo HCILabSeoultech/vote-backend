@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class NotificationDto {
     private final Long id;
+    private final Long targetUserId;
     private final NotificationType type;
     private final String title;
     private final String body;
@@ -23,6 +24,7 @@ public class NotificationDto {
     public static NotificationDto from(Notification notification) {
         return new NotificationDto(
                 notification.getId(),
+                notification.getTargetUserId(),
                 notification.getType(),
                 notification.getTitle(),
                 notification.getBody(),
