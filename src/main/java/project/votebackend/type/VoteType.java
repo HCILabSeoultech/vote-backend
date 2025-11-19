@@ -1,5 +1,5 @@
 package project.votebackend.type;
 
 public enum VoteType {
-    NORMAL, TEXT, IMAGE, VIDEO
+    NEUTRAL, NORMAL, TEXT, IMAGE, VIDEO
 }
