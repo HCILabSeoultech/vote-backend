@@ -12,7 +12,9 @@ import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.VoteException;
+import project.votebackend.repository.category.CategoryRepository;
 import project.votebackend.repository.user.UserRepository;
+import project.votebackend.repository.vote.MainPageVoteRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ErrorCode;
@@ -30,9 +32,20 @@ public class VoteLoadService {
     private final VoteRepository voteRepository;
     private final VoteStatisticsUtil voteStatisticsUtil;
     private final VoteSelectRepository voteSelectRepository;
+    private final MainPageVoteRepository mainPageVoteRepository;
 
     // 메인페이지 투표 불러오기
-    public Page<LoadVoteDto> getMainPageVotes(Long userId, Pageable pageable, @Nullable String mixSalt) {
+    private static final Long AI_USER_ID = 20L;
+    private static final int AI_CADENCE = 3; // 일반 3개마다 AI 1개
+
+    @SuppressWarnings("unchecked")
+    public Page<LoadVoteDto> getMainPageVotes(
+            Long userId,
+            Pageable pageable,
+            @Nullable String mixSalt
+    ) {
+
+        // 1) 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
@@ -40,175 +53,87 @@ public class VoteLoadService {
                 .map(i -> i.getCategory().getCategoryId())
                 .toList();
 
-        int offset = pageable.getPageNumber() * pageable.getPageSize();
-        int size   = pageable.getPageSize();
+        int pageSize = pageable.getPageSize();
+        int fetchSize = pageSize * 30;
 
-        Long aiUserId = 20L;
+        // 2) 후보 전체 가져오기
+        List<Vote> candidates = mainPageVoteRepository.findMainFeedUnified(
+                userId,
+                categoryIds,
+                fetchSize,
+                AI_USER_ID
+        );
 
-        // 1) 기본 피드
-        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size * 6, 0, aiUserId);
+        // 3) 참여 여부 & AI 여부 기반 버킷 분리
+        List<Vote> nonAiUnselected = new ArrayList<>();
+        List<Vote> aiUnselected = new ArrayList<>();
+        List<Vote> selected = new ArrayList<>();
 
-        // 2) base 참여여부 한방 조회 → 분리
-        List<Long> baseIds = base.stream().map(Vote::getVoteId).toList();
-        Set<Long> basePart = baseIds.isEmpty() ? Set.of()
-                : voteSelectRepository.findParticipatedVoteIds(userId, baseIds);
+        for (Vote v : candidates) {
+            boolean participated = voteSelectRepository.existsByUser_UserIdAndVote_VoteId(userId, v.getVoteId());
 
-        List<Vote> baseTop = new ArrayList<>(); // 미참여
-        List<Vote> baseLow = new ArrayList<>(); // 참여
-        for (Vote v : base) {
-            if (basePart.contains(v.getVoteId())) baseLow.add(v);
-            else baseTop.add(v);
+            if (participated) {
+                selected.add(v);    // 참여한 글은 아래로
+                continue;
+            }
+
+            if (v.getUser().getUserId().equals(AI_USER_ID)) {
+                aiUnselected.add(v);   // 미참여 + AI
+            } else {
+                nonAiUnselected.add(v); // 미참여 + 일반 글
+            }
         }
 
-        // 3) 미참여 base만 deterministic 셔플
-        String salt = (mixSalt != null && !mixSalt.isBlank()) ? mixSalt.trim() : LocalDate.now().toString();
+        // 4) 셔플할 그룹만 셔플
+        String salt = (mixSalt != null && !mixSalt.isBlank())
+                ? mixSalt.trim()
+                : LocalDate.now().toString();
+
         long seed = Objects.hash(userId, salt);
         Random rnd = new Random(seed);
 
-        Collections.shuffle(baseTop, rnd);
-        Collections.shuffle(baseLow, rnd);
+        Collections.shuffle(nonAiUnselected, rnd);
+        Collections.shuffle(aiUnselected, rnd);
 
-        // 4) AI/인기 기존처럼 top/low 분리
-        List<Vote> ai  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, size * 4, aiUserId);
-        List<Vote> pop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, size * 4));
+        // 5) 일반글 사이에 AI 삽입
+        List<Vote> mergedTop = new ArrayList<>();
+        int i = 0;
+        int aiIdx = 0;
 
-        List<Long> aiIds  = ai.stream().map(Vote::getVoteId).toList();
-        List<Long> popIds = pop.stream().map(Vote::getVoteId).toList();
+        for (Vote v : nonAiUnselected) {
+            mergedTop.add(v);
+            i++;
 
-        Set<Long> aiPart  = aiIds.isEmpty()  ? Set.of() : voteSelectRepository.findParticipatedVoteIds(userId, aiIds);
-        Set<Long> popPart = popIds.isEmpty() ? Set.of() : voteSelectRepository.findParticipatedVoteIds(userId, popIds);
-
-        List<Vote> aiTop = new ArrayList<>(), aiLow = new ArrayList<>();
-        for (Vote v : ai)  (aiPart.contains(v.getVoteId())  ? aiLow : aiTop).add(v);
-        List<Vote> popTop = new ArrayList<>(), popLow = new ArrayList<>();
-        for (Vote v : pop) (popPart.contains(v.getVoteId()) ? popLow : popTop).add(v);
-
-        // 후보 버킷만 셔플
-        Collections.shuffle(aiTop, rnd);
-        Collections.shuffle(aiLow, rnd);
-        Collections.shuffle(popTop, rnd);
-        Collections.shuffle(popLow, rnd);
-
-        // 5) 병합: baseTop → baseLow 우선, 3:1 규칙, 주입 시 top → low
-        List<Vote> merged = mergeOnlyBaseTopShuffled(
-                baseTop, baseLow, aiTop, aiLow, popTop, popLow,
-                3, 0.5, size * 4, rnd
-        );
-
-        // 6) 최소 40개 보장 — 여기도 top → low 우선 규칙 유지
-        int minCount = 40;
-        if (merged.size() < minCount) {
-            Set<Long> used = merged.stream().map(Vote::getVoteId).collect(Collectors.toSet());
-
-            List<Vote> extraAi  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, minCount, aiUserId);
-            List<Vote> extraPop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, minCount));
-
-            // 분리
-            Set<Long> extraAiPart  = extraAi.isEmpty()  ? Set.of()
-                    : voteSelectRepository.findParticipatedVoteIds(userId, extraAi.stream().map(Vote::getVoteId).toList());
-            Set<Long> extraPopPart = extraPop.isEmpty() ? Set.of()
-                    : voteSelectRepository.findParticipatedVoteIds(userId, extraPop.stream().map(Vote::getVoteId).toList());
-
-            List<Vote> extraAiTop = new ArrayList<>(), extraAiLow = new ArrayList<>();
-            for (Vote v : extraAi) (extraAiPart.contains(v.getVoteId()) ? extraAiLow : extraAiTop).add(v);
-
-            List<Vote> extraPopTop = new ArrayList<>(), extraPopLow = new ArrayList<>();
-            for (Vote v : extraPop) (extraPopPart.contains(v.getVoteId()) ? extraPopLow : extraPopTop).add(v);
-
-            // 셔플
-            Collections.shuffle(extraAiTop, rnd);
-            Collections.shuffle(extraAiLow, rnd);
-            Collections.shuffle(extraPopTop, rnd);
-            Collections.shuffle(extraPopLow, rnd);
-
-            // top → low 우선으로 채우기
-            List<List<Vote>> fillOrder = List.of(extraAiTop, extraPopTop, extraAiLow, extraPopLow);
-            outer:
-            for (List<Vote> bucket : fillOrder) {
-                for (Vote v : bucket) {
-                    if (merged.size() >= minCount) break outer;
-                    if (used.add(v.getVoteId())) merged.add(v);
-                }
+            if (i % AI_CADENCE == 0 && aiIdx < aiUnselected.size()) {
+                mergedTop.add(aiUnselected.get(aiIdx++));
             }
         }
 
-        // 7) 페이지네이션
-        int fromIndex = Math.min(offset, merged.size());
-        int toIndex   = Math.min(offset + size, merged.size());
-        List<Vote> paged = merged.subList(fromIndex, toIndex);
+        // 남은 AI 글이 있으면 뒤에 추가
+        while (aiIdx < aiUnselected.size()) {
+            mergedTop.add(aiUnselected.get(aiIdx++));
+        }
 
-        // 8) 통계 + PageImpl
+        // 6) 참여한 글은 최신순으로 아래에 붙임
+        selected.sort(Comparator.comparing(Vote::getCreatedAt).reversed());
+
+        List<Vote> finalFeed = new ArrayList<>(mergedTop.size() + selected.size());
+        finalFeed.addAll(mergedTop);
+        finalFeed.addAll(selected);
+
+        // 7) 페이지네이션
+        int offset = pageable.getPageNumber() * pageSize;
+        int fromIndex = Math.min(offset, finalFeed.size());
+        int toIndex = Math.min(offset + pageSize, finalFeed.size());
+
+        List<Vote> paged = finalFeed.subList(fromIndex, toIndex);
+
+        // 8) 통계 계산
         List<Long> voteIds = paged.stream().map(Vote::getVoteId).toList();
         Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
 
-        Page<Vote> pageWrapped = new PageImpl<>(paged, pageable, Math.max(merged.size(), minCount));
+        Page<Vote> pageWrapped = new PageImpl<>(paged, pageable, finalFeed.size());
         return voteStatisticsUtil.getLoadVoteDtos(userId, pageWrapped, stats, pageable);
-    }
-
-    private List<Vote> mergeOnlyBaseTopShuffled(
-            List<Vote> baseTop,   // 미참여 base
-            List<Vote> baseLow,   // 참여 base
-            List<Vote> aiTop, List<Vote> aiLow,
-            List<Vote> popTop, List<Vote> popLow,
-            int cadence, double aiRatio, int pageSize, Random rnd
-    ) {
-        List<Vote> out = new ArrayList<>(pageSize);
-        Set<Long> used = new HashSet<>();
-        int i = 0;
-
-        // 주입 후보 선택: 항상 top → low 우선
-        java.util.function.Supplier<Vote> pickInjected = () -> {
-            boolean pickAI = rnd.nextDouble() < aiRatio;
-            Vote v = null;
-            if (pickAI) {
-                if (!aiTop.isEmpty()) v = aiTop.remove(0);
-                else if (!popTop.isEmpty()) v = popTop.remove(0);
-                else if (!aiLow.isEmpty()) v = aiLow.remove(0);
-                else if (!popLow.isEmpty()) v = popLow.remove(0);
-            } else {
-                if (!popTop.isEmpty()) v = popTop.remove(0);
-                else if (!aiTop.isEmpty()) v = aiTop.remove(0);
-                else if (!popLow.isEmpty()) v = popLow.remove(0);
-                else if (!aiLow.isEmpty()) v = aiLow.remove(0);
-            }
-            return v;
-        };
-
-        while (out.size() < pageSize &&
-                (!baseTop.isEmpty() || !baseLow.isEmpty() || !aiTop.isEmpty() || !aiLow.isEmpty() || !popTop.isEmpty() || !popLow.isEmpty())) {
-
-            boolean injectionPoint = cadence > 0 && ((i % (cadence + 1)) == cadence);
-
-            if (injectionPoint) {
-                Vote inj = pickInjected.get();
-                if (inj != null && used.add(inj.getVoteId())) {
-                    out.add(inj);
-                    i++;
-                    continue;
-                }
-            }
-
-            // base 소비: 미참여(baseTop) → 참여(baseLow) 우선
-            Vote nextBase = !baseTop.isEmpty() ? baseTop.remove(0)
-                    : !baseLow.isEmpty() ? baseLow.remove(0)
-                    : null;
-
-            if (nextBase != null) {
-                if (used.add(nextBase.getVoteId())) out.add(nextBase);
-                i++;
-            } else {
-                // base가 고갈되면 후보로 백필 (top → low)
-                Vote fb = !aiTop.isEmpty() ? aiTop.remove(0)
-                        : !popTop.isEmpty() ? popTop.remove(0)
-                        : !aiLow.isEmpty() ? aiLow.remove(0)
-                        : !popLow.isEmpty() ? popLow.remove(0)
-                        : null;
-                if (fb == null) break;
-                if (used.add(fb.getVoteId())) out.add(fb);
-                i++;
-            }
-        }
-        return out;
     }
 
     //단일 투표 불러오기
