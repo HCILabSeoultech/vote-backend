@@ -1,14 +1,11 @@
 package project.votebackend.repository.vote;
 
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.votebackend.domain.follow.QFollow;
 import project.votebackend.domain.vote.QVote;
@@ -16,12 +13,7 @@ import project.votebackend.domain.vote.QVoteSelection;
 import project.votebackend.domain.vote.Vote;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import static project.votebackend.type.VoteStatus.PUBLISHED;
 
 @Repository
 @RequiredArgsConstructor

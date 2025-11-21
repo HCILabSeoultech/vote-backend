@@ -33,7 +33,6 @@ public class VoteLoadService {
     private final VoteStatisticsUtil voteStatisticsUtil;
     private final VoteSelectRepository voteSelectRepository;
     private final MainPageVoteRepository mainPageVoteRepository;
-    private final CategoryRepository categoryRepository;
 
     // 메인페이지 투표 불러오기
     public Page<LoadVoteDto> getMainPageVotes(
@@ -50,12 +49,12 @@ public class VoteLoadService {
                 .toList();
 
         int pageSize = pageable.getPageSize();
-        int fetchSize = pageSize * 10; // 과거 300개 → 이제 100개만
+        int fetchSize = pageSize * 30;
 
         Long aiUserId = 20L;
 
         // ===============================================
-        // 1) 단일 대형 쿼리로 후보 전체 불러오기 (100개 이내)
+        // 1) 단일 대형 쿼리로 후보 전체 불러오기
         // ===============================================
         List<Vote> candidates = mainPageVoteRepository.findMainFeedUnified(
                 userId,
@@ -65,7 +64,7 @@ public class VoteLoadService {
         );
 
         // ===============================================
-        // 2) 섞기 (deterministic)
+        // 2) 섞기
         // ===============================================
         String salt = (mixSalt != null && !mixSalt.isBlank())
                 ? mixSalt.trim()
@@ -86,7 +85,7 @@ public class VoteLoadService {
         List<Vote> paged = candidates.subList(fromIndex, toIndex);
 
         // ===============================================
-        // 4) 통계 조회 (이건 1번만 수행)
+        // 4) 통계 조회
         // ===============================================
         List<Long> voteIds = paged.stream().map(Vote::getVoteId).toList();
         Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);

@@ -11,6 +11,4 @@ import java.util.List;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    @Query("select c.categoryId from Category c where c.categoryId not in :ids")
-    List<Long> findAllCategoryIdsExcept(@Param("ids") List<Long> ids);
 }
