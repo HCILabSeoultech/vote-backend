@@ -12,7 +12,9 @@ import project.votebackend.domain.vote.Vote;
 import project.votebackend.dto.vote.LoadVoteDto;
 import project.votebackend.exception.AuthException;
 import project.votebackend.exception.VoteException;
+import project.votebackend.repository.category.CategoryRepository;
 import project.votebackend.repository.user.UserRepository;
+import project.votebackend.repository.vote.MainPageVoteRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
 import project.votebackend.type.ErrorCode;
@@ -30,6 +32,8 @@ public class VoteLoadService {
     private final VoteRepository voteRepository;
     private final VoteStatisticsUtil voteStatisticsUtil;
     private final VoteSelectRepository voteSelectRepository;
+    private final MainPageVoteRepository mainPageVoteRepository;
+    private final CategoryRepository categoryRepository;
 
     // 메인페이지 투표 불러오기
     public Page<LoadVoteDto> getMainPageVotes(Long userId, Pageable pageable, @Nullable String mixSalt) {
@@ -46,7 +50,7 @@ public class VoteLoadService {
         Long aiUserId = 20L;
 
         // 1) 기본 피드
-        List<Vote> base = voteRepository.findMainPageVotesUnion(userId, categoryIds, size * 6, 0, aiUserId);
+        List<Vote> base = mainPageVoteRepository.findMainPageVotesUnion(userId, categoryIds, size * 6, 0, aiUserId);
 
         // 2) base 참여여부 한방 조회 → 분리
         List<Long> baseIds = base.stream().map(Vote::getVoteId).toList();
@@ -69,8 +73,8 @@ public class VoteLoadService {
         Collections.shuffle(baseLow, rnd);
 
         // 4) AI/인기 기존처럼 top/low 분리
-        List<Vote> ai  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, size * 4, aiUserId);
-        List<Vote> pop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, size * 4));
+        List<Vote> ai  = mainPageVoteRepository.findAiCandidatesForCategories(userId, categoryIds, size * 4, aiUserId);
+        List<Vote> pop = mainPageVoteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, size * 4));
 
         List<Long> aiIds  = ai.stream().map(Vote::getVoteId).toList();
         List<Long> popIds = pop.stream().map(Vote::getVoteId).toList();
@@ -95,13 +99,13 @@ public class VoteLoadService {
                 3, 0.5, size * 4, rnd
         );
 
-        // 6) 최소 40개 보장 — 여기도 top → low 우선 규칙 유지
-        int minCount = 40;
+        // 6) 최소 300개 보장 — 여기도 top → low 우선 규칙 유지
+        int minCount = 300;
         if (merged.size() < minCount) {
             Set<Long> used = merged.stream().map(Vote::getVoteId).collect(Collectors.toSet());
 
-            List<Vote> extraAi  = voteRepository.findAiCandidatesForCategories(userId, categoryIds, minCount, aiUserId);
-            List<Vote> extraPop = voteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, minCount));
+            List<Vote> extraAi  = mainPageVoteRepository.findAiCandidatesForCategories(userId, categoryIds, minCount, aiUserId);
+            List<Vote> extraPop = mainPageVoteRepository.findPopularCandidatesGlobal(userId, PageRequest.of(0, minCount));
 
             // 분리
             Set<Long> extraAiPart  = extraAi.isEmpty()  ? Set.of()
@@ -129,6 +133,29 @@ public class VoteLoadService {
                     if (merged.size() >= minCount) break outer;
                     if (used.add(v.getVoteId())) merged.add(v);
                 }
+            }
+        }
+
+        // 1) 사용한 voteId 목록
+        Set<Long> usedIds = merged.stream()
+                .map(Vote::getVoteId)
+                .collect(Collectors.toSet());
+
+        // 2) other categories 구하기
+        List<Long> otherCategoryIds = categoryRepository
+                .findAllCategoryIdsExcept(categoryIds); // 별도 repository 필요
+
+        if (!otherCategoryIds.isEmpty()) {
+            List<Vote> other = mainPageVoteRepository.findOtherCategoryCandidates(
+                    otherCategoryIds,
+                    minCount * 2,
+                    0,
+                    aiUserId
+            );
+
+            for (Vote v : other) {
+                if (usedIds.add(v.getVoteId())) merged.add(v);
+                if (merged.size() >= minCount) break;
             }
         }
 
