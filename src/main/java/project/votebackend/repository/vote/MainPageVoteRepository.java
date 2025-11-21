@@ -54,9 +54,11 @@ public class MainPageVoteRepository {
         // 기본 score (내 글 > 관심 카테고리 > 팔로우 > AI > 기타)
         NumberExpression<Integer> score = new CaseBuilder()
                 .when(v.user.userId.eq(userId)).then(50)
-                .when(v.category.categoryId.in(categoryIds)).then(40)
-                .when(v.user.userId.in(followings)).then(30)
-                .when(v.user.userId.eq(aiUserId)).then(20)
+                .when(v.category.categoryId.in(categoryIds)
+                        .and(v.user.userId.ne(aiUserId))).then(40)
+                .when(v.user.userId.in(followings)
+                        .and(v.user.userId.ne(aiUserId))).then(30)
+                .when(v.user.userId.eq(aiUserId)).then(5)
                 .otherwise(10);
 
         // 정렬 우선순위

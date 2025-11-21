@@ -78,4 +78,6 @@ public interface VoteSelectRepository extends JpaRepository<VoteSelection, Long>
     """)
     Set<Long> findParticipatedVoteIds(@Param("userId") Long userId,
                                       @Param("voteIds") Collection<Long> voteIds);
+
+    boolean existsByUser_UserIdAndVote_VoteId(Long userId, Long voteId);
 }

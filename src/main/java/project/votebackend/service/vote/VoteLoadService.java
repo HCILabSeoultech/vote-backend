@@ -35,37 +35,56 @@ public class VoteLoadService {
     private final MainPageVoteRepository mainPageVoteRepository;
 
     // 메인페이지 투표 불러오기
+    private static final Long AI_USER_ID = 20L;
+    private static final int AI_CADENCE = 3; // 일반 3개마다 AI 1개
+
+    @SuppressWarnings("unchecked")
     public Page<LoadVoteDto> getMainPageVotes(
             Long userId,
             Pageable pageable,
             @Nullable String mixSalt
     ) {
 
+        // 1) 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(ErrorCode.USERNAME_NOT_FOUND));
 
         List<Long> categoryIds = user.getUserInterests().stream()
-                .map(c -> c.getCategory().getCategoryId())
+                .map(i -> i.getCategory().getCategoryId())
                 .toList();
 
         int pageSize = pageable.getPageSize();
         int fetchSize = pageSize * 30;
 
-        Long aiUserId = 20L;
-
-        // ===============================================
-        // 1) 단일 대형 쿼리로 후보 전체 불러오기
-        // ===============================================
+        // 2) 후보 전체 가져오기
         List<Vote> candidates = mainPageVoteRepository.findMainFeedUnified(
                 userId,
                 categoryIds,
                 fetchSize,
-                aiUserId
+                AI_USER_ID
         );
 
-        // ===============================================
-        // 2) 섞기
-        // ===============================================
+        // 3) 참여 여부 & AI 여부 기반 버킷 분리
+        List<Vote> nonAiUnselected = new ArrayList<>();
+        List<Vote> aiUnselected = new ArrayList<>();
+        List<Vote> selected = new ArrayList<>();
+
+        for (Vote v : candidates) {
+            boolean participated = voteSelectRepository.existsByUser_UserIdAndVote_VoteId(userId, v.getVoteId());
+
+            if (participated) {
+                selected.add(v);    // 참여한 글은 아래로
+                continue;
+            }
+
+            if (v.getUser().getUserId().equals(AI_USER_ID)) {
+                aiUnselected.add(v);   // 미참여 + AI
+            } else {
+                nonAiUnselected.add(v); // 미참여 + 일반 글
+            }
+        }
+
+        // 4) 셔플할 그룹만 셔플
         String salt = (mixSalt != null && !mixSalt.isBlank())
                 ? mixSalt.trim()
                 : LocalDate.now().toString();
@@ -73,24 +92,47 @@ public class VoteLoadService {
         long seed = Objects.hash(userId, salt);
         Random rnd = new Random(seed);
 
-        Collections.shuffle(candidates, rnd);
+        Collections.shuffle(nonAiUnselected, rnd);
+        Collections.shuffle(aiUnselected, rnd);
 
-        // ===============================================
-        // 3) 페이지네이션
-        // ===============================================
+        // 5) 일반글 사이에 AI 삽입
+        List<Vote> mergedTop = new ArrayList<>();
+        int i = 0;
+        int aiIdx = 0;
+
+        for (Vote v : nonAiUnselected) {
+            mergedTop.add(v);
+            i++;
+
+            if (i % AI_CADENCE == 0 && aiIdx < aiUnselected.size()) {
+                mergedTop.add(aiUnselected.get(aiIdx++));
+            }
+        }
+
+        // 남은 AI 글이 있으면 뒤에 추가
+        while (aiIdx < aiUnselected.size()) {
+            mergedTop.add(aiUnselected.get(aiIdx++));
+        }
+
+        // 6) 참여한 글은 최신순으로 아래에 붙임
+        selected.sort(Comparator.comparing(Vote::getCreatedAt).reversed());
+
+        List<Vote> finalFeed = new ArrayList<>(mergedTop.size() + selected.size());
+        finalFeed.addAll(mergedTop);
+        finalFeed.addAll(selected);
+
+        // 7) 페이지네이션
         int offset = pageable.getPageNumber() * pageSize;
-        int fromIndex = Math.min(offset, candidates.size());
-        int toIndex = Math.min(offset + pageSize, candidates.size());
+        int fromIndex = Math.min(offset, finalFeed.size());
+        int toIndex = Math.min(offset + pageSize, finalFeed.size());
 
-        List<Vote> paged = candidates.subList(fromIndex, toIndex);
+        List<Vote> paged = finalFeed.subList(fromIndex, toIndex);
 
-        // ===============================================
-        // 4) 통계 조회
-        // ===============================================
+        // 8) 통계 계산
         List<Long> voteIds = paged.stream().map(Vote::getVoteId).toList();
         Map<String, Object> stats = voteStatisticsUtil.collectVoteStatistics(userId, voteIds);
 
-        Page<Vote> pageWrapped = new PageImpl<>(paged, pageable, candidates.size());
+        Page<Vote> pageWrapped = new PageImpl<>(paged, pageable, finalFeed.size());
         return voteStatisticsUtil.getLoadVoteDtos(userId, pageWrapped, stats, pageable);
     }
 
