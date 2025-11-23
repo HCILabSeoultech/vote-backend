@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import project.votebackend.dto.user.UserMonthlyRankDto;
-import project.votebackend.service.rank.RankService;
+import project.votebackend.service.rank.RankRedisService;
 
 import java.util.List;
 
@@ -16,13 +16,12 @@ import java.util.List;
 @RequestMapping("rank")
 public class RankController {
 
-    private final RankService rankService;
+    private final RankRedisService rankRedisService;
 
     @GetMapping("/monthly")
     public ResponseEntity<List<UserMonthlyRankDto>> getMonthlyRank(
-            @RequestParam int year,
-            @RequestParam int month
+            @RequestParam(defaultValue = "20") int limit
     ) {
-        return ResponseEntity.ok(rankService.getMonthlyRank(year, month));
+        return ResponseEntity.ok(rankRedisService.getMonthlyRank(limit));
     }
 }
