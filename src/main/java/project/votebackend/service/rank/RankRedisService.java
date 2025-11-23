@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import project.votebackend.domain.rank.MonthlyUserRanking;
 import project.votebackend.domain.user.User;
 import project.votebackend.dto.user.UserMonthlyRankDto;
+import project.votebackend.repository.rank.MonthlyUserRankingRepository;
 import project.votebackend.repository.user.UserRepository;
 
 import java.time.LocalDateTime;
@@ -19,6 +22,7 @@ public class RankRedisService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final UserRepository userRepository;
+    private final MonthlyUserRankingRepository monthlyUserRankingRepository;
 
     private String getMonthlyKey(LocalDateTime time) {
         int year = time.getYear();
@@ -66,5 +70,38 @@ public class RankRedisService {
         }
 
         return result;
+    }
+
+    @Transactional
+    public void settleMonthlyRanking(int year, int month) {
+
+        String key = "monthlyRank:" + year + "-" + month;
+
+        // Redis에서 전체 ZSET 조회
+        Set<ZSetOperations.TypedTuple<String>> ranks =
+                redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, -1);
+
+        if (ranks == null || ranks.isEmpty()) {
+            return;
+        }
+
+        for (ZSetOperations.TypedTuple<String> tuple : ranks) {
+
+            Long userId = Long.valueOf(tuple.getValue());
+            Long score = tuple.getScore().longValue();
+
+            MonthlyUserRanking ranking = MonthlyUserRanking.builder()
+                    .year(year)
+                    .month(month)
+                    .userId(userId)
+                    .score(score)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            monthlyUserRankingRepository.save(ranking);
+        }
+
+        // Redis 데이터 초기화
+        redisTemplate.delete(key);
     }
 }
