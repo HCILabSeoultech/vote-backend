@@ -64,7 +64,8 @@ public class SecurityConfig {
                                 "/rank/**",            // 랭킹
                                 "/cluster/**",          // 생성된 뉴스
                                 "news/**",
-                                "notification/**"
+                                "notification/**",
+                                "/rank/**"
                         ).authenticated()
 
                         // 그 외 요청은 모두 허용
