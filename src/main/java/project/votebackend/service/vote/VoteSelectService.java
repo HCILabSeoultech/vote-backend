@@ -14,6 +14,7 @@ import project.votebackend.repository.user.UserRepository;
 import project.votebackend.repository.vote.VoteOptionRepository;
 import project.votebackend.repository.vote.VoteRepository;
 import project.votebackend.repository.vote.VoteSelectRepository;
+import project.votebackend.service.rank.RankRedisService;
 import project.votebackend.type.ErrorCode;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,7 @@ public class VoteSelectService{
     private final VoteRepository voteRepository;
     private final VoteOptionRepository voteOptionRepository;
     private final VoteSelectRepository voteSelectRepository;
+    private final RankRedisService rankRedisService;
 
     //투표 참여
     @Transactional
@@ -45,6 +47,7 @@ public class VoteSelectService{
 
         // 기존 선택이 있으면 수정
         Optional<VoteSelection> existing = voteSelectRepository.findByUserAndVote(user, vote);
+        boolean isNewVote = existing.isEmpty();
         VoteSelection selection = existing.orElse(new VoteSelection());
 
         selection.setUser(user);
@@ -52,6 +55,10 @@ public class VoteSelectService{
         selection.setOption(option);
 
         voteSelectRepository.save(selection);
+
+        if (isNewVote) {
+            rankRedisService.increaseUserScore(vote.getUser().getUserId());
+        }
 
         return VoteSelectResponse.builder()
                 .voteId(voteId)
@@ -78,6 +85,7 @@ public class VoteSelectService{
                 .orElseThrow(() -> new VoteException(ErrorCode.VOTE_SELECTION_NOT_FOUND));
 
         voteSelectRepository.delete(selection);
+        rankRedisService.decreaseUserScore(vote.getUser().getUserId());
     }
 }
 
